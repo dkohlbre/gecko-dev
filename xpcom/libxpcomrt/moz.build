@@ -105,6 +105,7 @@ xpcom_threads_src = [
     'nsThread.cpp',
     'nsThreadManager.cpp',
     'nsThreadPool.cpp',
+    'PauseTask.cpp',
     'nsTimerImpl.cpp',
     'TimerThread.cpp',
 ]

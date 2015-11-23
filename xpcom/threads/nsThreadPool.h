@@ -14,6 +14,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
+#include "PauseTask.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Mutex.h"
@@ -38,6 +39,7 @@ public:
 private:
   ~nsThreadPool();
 
+  bool donewpause;
   void ShutdownThread(nsIThread* aThread);
   nsresult PutEvent(nsIRunnable* aEvent);
   nsresult PutEvent(already_AddRefed<nsIRunnable>&& aEvent);

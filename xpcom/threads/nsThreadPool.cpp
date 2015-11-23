@@ -11,6 +11,7 @@
 #include "nsMemory.h"
 #include "nsAutoPtr.h"
 #include "prinrval.h"
+#include "PauseTask.h"
 #include "mozilla/Logging.h"
 #include "nsThreadSyncDispatch.h"
 
@@ -51,6 +52,7 @@ nsThreadPool::nsThreadPool()
   , mShutdown(false)
 {
   LOG(("THRD-P(%p) constructor!!!\n", this));
+  donewpause = false;
 }
 
 nsThreadPool::~nsThreadPool()
@@ -147,6 +149,13 @@ nsThreadPool::ShutdownThread(nsIThread* aThread)
 NS_IMETHODIMP
 nsThreadPool::Run()
 {
+
+  if(!donewpause){
+    donewpause = true;
+    LOG(("[PauseTask][ThreadPool] First pause placed in %p\n",this));
+    PutEvent(new pauseTask(0,pauseTask::uptick,this));
+  }
+
   mThreadNaming.SetThreadPoolName(mName);
 
   LOG(("THRD-P(%p) enter %s\n", this, mName.BeginReading()));
