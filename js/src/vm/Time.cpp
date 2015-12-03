@@ -43,6 +43,31 @@ extern int gettimeofday(struct timeval* tv);
 
 using mozilla::DebugOnly;
 
+int64_t currentClock = 0;
+
+int64_t StartLockedClock(){
+    currentClock = PRMJ_Now();
+    printf("[PauseTask][Clock] Started at %ld\n",currentClock);
+    return currentClock;
+}
+
+int64_t getLockedClock(){
+    return currentClock;
+}
+
+int64_t updateLockedClock(int64_t update){
+    currentClock += update;
+    return currentClock;
+}
+#if defined(XP_UNIX)
+int64_t checkLockedClockOffset(){
+    struct timeval tv;
+    gettimeofday(&tv,0);
+    int64_t actualTime = int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec);
+    return actualTime-currentClock;
+}
+#endif
+
 #if defined(XP_UNIX)
 int64_t
 PRMJ_Now()
@@ -55,7 +80,10 @@ PRMJ_Now()
     gettimeofday(&tv, 0);
 #endif /* _SVID_GETTOD */
 
-    return int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec);
+    if(currentClock != 0)
+        return currentClock;
+    else
+        return int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec);
 }
 
 #else
