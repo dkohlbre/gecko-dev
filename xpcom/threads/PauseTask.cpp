@@ -11,54 +11,68 @@ static LazyLogModule sPauseTaskLog("PauseTask");
 #endif
 #define LOG(args) MOZ_LOG(sPauseTaskLog, mozilla::LogLevel::Debug, args)
 
+#define PT_STATIC_DURATION  80
+#define PT_STATIC_CLOCK_GRAIN 80
 
-pauseTask::pauseTask(uint32_t aDuration, pauseTask::tick aTickType, nsThreadPool* const aParent){
-  this->mDuration = aDuration;
+pauseTask::pauseTask(uint32_t aDuration_us, pauseTask::tick aTickType, nsThreadPool* const aParent){
+  this->mDuration_us = aDuration_us;
   this->mParent = aParent;
   this->mTickType = aTickType;
 
   timeval tv;
   gettimeofday(&tv,NULL);
-  this->mStartTime = tv.tv_usec + (1000000*tv.tv_sec);
+  this->mStartTime_us = actualTime_us();
+
 }
+
+int64_t pauseTask::actualTime_us(){
+  timeval tv;
+  gettimeofday(&tv,NULL);
+  return tv.tv_usec + (1000000*tv.tv_sec);
+}
+
 
 NS_IMETHODIMP
 pauseTask::Run()
 {
   // We need to check how long its been since we ran
-  timeval tv;
-  gettimeofday(&tv,NULL);
-  uint64_t endTime = tv.tv_usec + (1000000*tv.tv_sec);
+  uint64_t endTime_us = actualTime_us();
 
-  uint64_t remainingUS = 0;
+  uint64_t remaining_us = 0;
+  uint64_t durationCount = 1;
 
   // Pick the amount to sleep
-  if( (endTime-this->mStartTime) > this->mDuration){
+  if( (endTime_us-this->mStartTime_us) > this->mDuration_us){
     // We ran over our budget!
-    uint64_t overUS = (endTime-this->mStartTime)-this->mDuration;
-    LOG(("[PauseTaskEvent] PT(%p) TP(%p) Overran budget of %" PRIu64 " by %" PRIu64 " \n", this,mParent,this->mDuration,overUS));
+    uint64_t over_us = (endTime_us-this->mStartTime_us)-this->mDuration_us;
+    LOG(("[PauseTaskEvent] PT(%p) TP(%p) Overran budget of %" PRIu64 " by %" PRIu64 " \n", this,mParent,this->mDuration_us,over_us));
 
-    uint64_t nextDuration = this->pickDuration();
-    while(overUS > nextDuration){
-      overUS -= nextDuration;
-      nextDuration = this->pickDuration();
+    uint64_t nextDuration_us = this->pickDuration_us();
+    while(over_us > nextDuration_us){
+      durationCount++;
+      over_us -= nextDuration_us;
+      nextDuration_us = this->pickDuration_us();
     }
-    remainingUS = nextDuration - overUS;
+    
+    remaining_us = nextDuration_us - over_us;
   }
   else{
     // Didn't go over budget
-    remainingUS = this->mDuration-(endTime-this->mStartTime);
-    LOG(("[PauseTaskEvent] PT(%p) TP(%p) Finishing budget of %"PRIu64" with %"PRIu64" \n", this,mParent,this->mDuration,remainingUS));
+    remaining_us = this->mDuration_us-(endTime_us-this->mStartTime_us);
+    LOG(("[PauseTaskEvent] PT(%p) TP(%p) Finishing budget of %" PRIu64 " with %" PRIu64 " \n", this,mParent,this->mDuration_us,remaining_us));
 
   }
 
   // Sleep for now
-  usleep(remainingUS);
+  usleep(remaining_us);
+
+  // Update clocks (and fire pending events etc)
+  updateClocks();
 
 
   // Queue next event
   mParent->Dispatch(
-                    new pauseTask(this->pickDuration(),
+                    new pauseTask(this->pickDuration_us(),
                                   (this->mTickType == this->uptick)?this->downtick:this->uptick,
                                   mParent),
                     0);
@@ -66,7 +80,26 @@ pauseTask::Run()
   return NS_OK;
 }
 
-uint64_t pauseTask::pickDuration(){                                                                                                                           
+void pauseTask::updateClocks(){
+
+  int64_t timeus = actualTime_us();
+  int64_t grainus = getClockGrain_us();
+  int64_t newTime_us = timeus - (timeus % grainus);
+
+  // newTime_us is the new canonical time for this scope!
+
+  //TODO: Hook into the queues/etc here!
+  //TODO: Hook the DOM clock and any other clocks here!
+}
+
+uint64_t pauseTask::pickDuration_us(){
   // Static for now
-  return 80;
+  // Some normal distribution centered on a configurable value
+  return PT_STATIC_DURATION;
+}
+
+int64_t pauseTask::getClockGrain_us(){
+  // Static for now
+  // Should be reading from some config probably
+  return PT_STATIC_CLOCK_GRAIN;
 }

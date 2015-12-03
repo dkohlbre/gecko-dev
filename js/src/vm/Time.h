@@ -30,6 +30,12 @@ struct PRMJTime {
 #define PRMJ_USEC_PER_SEC       1000000L
 #define PRMJ_USEC_PER_MSEC      1000L
 
+/* Locked clock impl*/
+int64_t StartLockedClock();
+int64_t getLockedClock();
+int64_t updateLockedClock(int64_t update);
+int64_t checkLockedClockOffset();
+
 /* Return the current local time in micro-seconds */
 extern int64_t
 PRMJ_Now();

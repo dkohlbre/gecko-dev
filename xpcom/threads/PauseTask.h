@@ -18,17 +18,20 @@ class pauseTask :
  public:
   enum tick {uptick,downtick};
 
-  pauseTask(uint32_t aDuration, pauseTask::tick aTickType, nsThreadPool * const aParent);
+  pauseTask(uint32_t aDuration_us, pauseTask::tick aTickType, nsThreadPool * const aParent);
   NS_IMETHOD Run() override;
 
 
+  void updateClocks();
+  int64_t getClockGrain_us();
 
  private:
   tick mTickType;
-  uint32_t mDuration;
-  uint64_t mStartTime;
+  uint32_t mDuration_us;
+  uint64_t mStartTime_us;
   nsThreadPool* mParent;
-  uint64_t pickDuration();
+  uint64_t pickDuration_us();
+  static int64_t actualTime_us();
 };
 
 #endif /* PauseTask_h__ */
