@@ -5002,6 +5002,10 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
     NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
+    nsAutoCString nameStr;
+    this->GetName(nameStr);
+    LOG(("&&&& AsyncOpen: %s",nameStr.get()));
+
     nsresult rv;
 
     MOZ_ASSERT(NS_IsMainThread());
@@ -5047,8 +5051,37 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     mListener = listener;
     mListenerContext = context;
 
+    LOG(("&&&&& AsyncOpen: loadgroup %p\n",mLoadGroup.get()));
+
+    // PauseTask/DelayChannel queuing
+    if(delayChannelQueue.delayqueuelen > 1){
+        LOG(("&&&& AsyncOpen: FIRING QUEUED"));
+        for(int i=0;i<delayChannelQueue.delayqueuelen;i++){
+            delayChannelQueue.delayqueue[i]->delayready = true;
+            ((nsHttpChannel*)delayChannelQueue.delayqueue[i])->AsyncOpenFinal();
+            ((nsHttpChannel*)delayChannelQueue.delayqueue[i])->Release();
+        }
+        delayChannelQueue.delayqueuelen = 0;
+        this->AsyncOpenFinal();
+    }
+    else{
+        LOG(("&&&& AsyncOpen: Queuing!"));
+        this->AddRef();
+        delayChannelQueue.delayqueue[delayChannelQueue.delayqueuelen] = this;
+        delayChannelQueue.delayqueuelen++;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::AsyncOpenFinal(){
+    // Added due to PauseTask/DelayChannel
+
+    nsresult rv;
+
     // add ourselves to the load group.  from this point forward, we'll report
     // all failures asynchronously.
+    LOG(("&&&&&  AsyncOpenFinal: loadgroup %p\n",mLoadGroup.get()));
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nullptr);
 
@@ -5073,6 +5106,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 NS_IMETHODIMP
 nsHttpChannel::AsyncOpen2(nsIStreamListener *aListener)
 {
+    LOG(("&&&&&&&& ASYNC2 called\n"));
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
