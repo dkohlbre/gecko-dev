@@ -119,11 +119,12 @@ __msan_unpoison(void const volatile *addr, size_t size);
  * Additional uses of this macro should be reviewed by people
  * conversant in leak-checking and/or MFBT peers.
  */
-#if defined(MOZ_ASAN)
-#  define MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(X) __lsan_ignore_object(X)
-#else
+//dkohlbre DelayChannel/PauseTask TEMP FIX FOR RUNTIME LINK ERRORS
+//#if defined(MOZ_ASAN)
+//#  define MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(X) __lsan_ignore_object(X)
+//#else
 #  define MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(X) /* nothing */
-#endif // defined(MOZ_ASAN)
+//#endif // defined(MOZ_ASAN)
 
 
 #endif /* mozilla_MemoryChecking_h */

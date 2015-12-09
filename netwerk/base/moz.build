@@ -195,6 +195,7 @@ UNIFIED_SOURCES += [
     'ChannelDiverterParent.cpp',
     'ClosingService.cpp',
     'Dashboard.cpp',
+    'DelayChannel.cpp',
     'EventTokenBucket.cpp',
     'LoadContextInfo.cpp',
     'LoadInfo.cpp',
