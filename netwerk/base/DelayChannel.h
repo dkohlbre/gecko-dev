@@ -13,6 +13,9 @@ namespace mozilla{
   public:
     DelayChannel* delayqueue[10];
     int delayqueuelen;
+    DelayChannelQueue();
+    int FireQueue();
+    int QueueChannel(DelayChannel* channel);
   };
   static DelayChannelQueue delayChannelQueue;
 }

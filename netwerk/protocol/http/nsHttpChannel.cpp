@@ -5051,37 +5051,25 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     mListener = listener;
     mListenerContext = context;
 
-    LOG(("&&&&& AsyncOpen: loadgroup %p\n",mLoadGroup.get()));
-
     // PauseTask/DelayChannel queuing
+    delayChannelQueue.QueueChannel(this);
+
+    //TODO: fire on downtick, not here
     if(delayChannelQueue.delayqueuelen > 1){
         LOG(("&&&& AsyncOpen: FIRING QUEUED"));
-        for(int i=0;i<delayChannelQueue.delayqueuelen;i++){
-            delayChannelQueue.delayqueue[i]->delayready = true;
-            ((nsHttpChannel*)delayChannelQueue.delayqueue[i])->AsyncOpenFinal();
-            ((nsHttpChannel*)delayChannelQueue.delayqueue[i])->Release();
-        }
-        delayChannelQueue.delayqueuelen = 0;
-        this->AsyncOpenFinal();
-    }
-    else{
-        LOG(("&&&& AsyncOpen: Queuing!"));
-        this->AddRef();
-        delayChannelQueue.delayqueue[delayChannelQueue.delayqueuelen] = this;
-        delayChannelQueue.delayqueuelen++;
+        delayChannelQueue.FireQueue();
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpChannel::AsyncOpenFinal(){
+nsHttpChannel::AsyncOpenFinal(TimeStamp ts){
     // Added due to PauseTask/DelayChannel
 
     nsresult rv;
 
     // add ourselves to the load group.  from this point forward, we'll report
     // all failures asynchronously.
-    LOG(("&&&&&  AsyncOpenFinal: loadgroup %p\n",mLoadGroup.get()));
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nullptr);
 
@@ -5089,7 +5077,7 @@ nsHttpChannel::AsyncOpenFinal(){
     // don't want it after OnModifyRequest() weighs in. But waiting for
     // that to complete would mean we don't include proxy resolution in the
     // timing.
-    mAsyncOpenTime = TimeStamp::Now();
+    mAsyncOpenTime = ts;
 
     // the only time we would already know the proxy information at this
     // point would be if we were proxying a non-http protocol like ftp
