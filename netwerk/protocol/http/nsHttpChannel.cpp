@@ -5117,7 +5117,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     nsAutoCString nameStr;
     this->GetName(nameStr);
-    LOG(("&&&& AsyncOpen: %s",nameStr.get()));
+    LOG(("[FuzzyFox][AsyncOpen] AsyncOpen: %s",nameStr.get()));
 
     nsresult rv;
 
@@ -5173,11 +5173,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // PauseTask/DelayChannel queuing
     delayChannelQueue.QueueChannel(this);
 
-    //TODO: fire on downtick, not here
-    if(delayChannelQueue.delayqueuelen > 1){
-        LOG(("&&&& AsyncOpen: FIRING QUEUED"));
-        delayChannelQueue.FireQueue();
-    }
     return NS_OK;
 }
 
@@ -5217,7 +5212,6 @@ nsHttpChannel::AsyncOpenFinal(TimeStamp ts){
 NS_IMETHODIMP
 nsHttpChannel::AsyncOpen2(nsIStreamListener *aListener)
 {
-    LOG(("&&&&&&&& ASYNC2 called\n"));
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
