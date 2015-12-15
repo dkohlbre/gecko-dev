@@ -3,6 +3,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
+
 using namespace mozilla;
 
 static LazyLogModule sPauseTaskLog("PauseTask");
@@ -45,7 +48,7 @@ pauseTask::Run()
   if( (endTime_us-this->mStartTime_us) > this->mDuration_us){
     // We ran over our budget!
     uint64_t over_us = (endTime_us-this->mStartTime_us)-this->mDuration_us;
-    LOG(("[PauseTaskEvent] PT(%p) TP(%p) Overran budget of %" PRIu64 " by %" PRIu64 " \n", this,mParent,this->mDuration_us,over_us));
+    LOG(("[FuzzyFox][PauseTaskEvent] PT(%p) TP(%p) Overran budget of %" PRIu64 " by %" PRIu64 " \n", this,mParent,this->mDuration_us,over_us));
 
     uint64_t nextDuration_us = this->pickDuration_us();
     while(over_us > nextDuration_us){
@@ -59,7 +62,7 @@ pauseTask::Run()
   else{
     // Didn't go over budget
     remaining_us = this->mDuration_us-(endTime_us-this->mStartTime_us);
-    LOG(("[PauseTaskEvent] PT(%p) TP(%p) Finishing budget of %" PRIu64 " with %" PRIu64 " \n", this,mParent,this->mDuration_us,remaining_us));
+    LOG(("[FuzzyFox][PauseTaskEvent] PT(%p) TP(%p) Finishing budget of %" PRIu64 " with %" PRIu64 " \n", this,mParent,this->mDuration_us,remaining_us));
 
   }
 
@@ -71,7 +74,7 @@ pauseTask::Run()
 
 
   // Queue next event
-  mParent->Dispatch(
+  NS_DispatchToMainThread(
                     new pauseTask(this->pickDuration_us(),
                                   (this->mTickType == this->uptick)?this->downtick:this->uptick,
                                   mParent),
@@ -88,6 +91,13 @@ void pauseTask::updateClocks(){
 
   // newTime_us is the new canonical time for this scope!
 
+  printf("&&& Firing from %p\n",mParent);
+
+  if(NS_IsMainThread()){
+    printf("&&&&&&&&& FIRING FROM MAIN!\n");
+  }
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  os->NotifyObservers(nullptr,"fuzzyfox-fire-outbound",NULL);
   //TODO: Hook into the queues/etc here!
   //TODO: Hook the DOM clock and any other clocks here!
 }

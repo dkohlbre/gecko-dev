@@ -1,6 +1,9 @@
 #ifndef _DelayChannel_h
 #define _DelayChannel_h
 
+#include "nsIObserverService.h"
+#include "nsIObserver.h"
+
 namespace mozilla{
   class DelayChannel{
   public:
@@ -9,13 +12,29 @@ namespace mozilla{
     //NS_IMETHOD AsyncOpenFinal();
   };
 
-  class DelayChannelQueue{
+  class DelayChannelQueue : public nsIObserver{
   public:
+    NS_DECL_NSIOBSERVER
+
     DelayChannel* delayqueue[10];
+    bool listening;
     int delayqueuelen;
     DelayChannelQueue();
     int FireQueue();
     int QueueChannel(DelayChannel* channel);
+
+    //TODO fix this
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) override {}
+
+    NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override
+      {
+	return 1;
+      }
+    NS_IMETHOD_(MozExternalRefCountType) Release(void) override
+      {
+	return 1;
+      }
+
   };
   static DelayChannelQueue delayChannelQueue;
 }
