@@ -91,11 +91,6 @@ void pauseTask::updateClocks(){
 
   // newTime_us is the new canonical time for this scope!
 
-  printf("&&& Firing from %p\n",mParent);
-
-  if(NS_IsMainThread()){
-    printf("&&&&&&&&& FIRING FROM MAIN!\n");
-  }
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   os->NotifyObservers(nullptr,"fuzzyfox-fire-outbound",NULL);
   //TODO: Hook into the queues/etc here!

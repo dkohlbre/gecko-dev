@@ -23,6 +23,7 @@ namespace mozilla{
     int FireQueue();
     int QueueChannel(DelayChannel* channel);
 
+
     //TODO fix this
     NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) override {}
 
@@ -37,5 +38,12 @@ namespace mozilla{
 
   };
   static DelayChannelQueue delayChannelQueue;
+
+
+  static int AttemptQueueChannel(DelayChannel* channel){
+    printf("&&&&& DELAYQUEUE %p\n",&delayChannelQueue);
+    return delayChannelQueue.QueueChannel(channel);
+  }
+
 }
 #endif /* _DelayChannel_h */

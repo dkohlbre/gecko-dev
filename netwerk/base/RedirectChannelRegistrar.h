@@ -7,6 +7,7 @@
 
 #include "nsIRedirectChannelRegistrar.h"
 
+#include "mozilla/Mutex.h"
 #include "nsIChannel.h"
 #include "nsIParentChannel.h"
 #include "nsInterfaceHashtable.h"
