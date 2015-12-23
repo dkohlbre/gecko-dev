@@ -9,6 +9,8 @@
 #include "nsIStreamListener.h"
 #include "mozilla/Logging.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Logging.h"
+#include "nsIStreamListener.h"
 
 static mozilla::LazyLogModule gChannelWrapperLog("ChannelWrapper");
 #define CHANNELWRAPPERLOG(args) MOZ_LOG(gChannelWrapperLog, mozilla::LogLevel::Debug, args)

@@ -5171,7 +5171,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     mListenerContext = context;
 
     // PauseTask/DelayChannel queuing
-    delayChannelQueue.QueueChannel(this);
+    
+    AttemptQueueChannel(this);
 
     return NS_OK;
 }
