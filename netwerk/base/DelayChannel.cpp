@@ -4,18 +4,26 @@
 namespace mozilla{
 
   DelayChannel::DelayChannel(){
-    //    LOG(("DelayChannel creation!\n"));
+    //    LOG(("[FuzzyFox][DC]DelayChannel creation!\n"));
   }
 
-  DelayChannelQueue::DelayChannelQueue(){
-    //    LOG(("Creating DelayChannelQueue\n"));
+  DelayChannelQueue::~DelayChannelQueue(){
+    //    LOG(("[FuzzyFox][DCQ]DelayChannelQueue Destroyed!\n"));
+  }
+
+  DelayChannelQueue::DelayChannelQueue():
+    queueLock("DelayChannelQueue"){
+    //    LOG(("[FuzzyFox][DCQ]Creating DelayChannelQueue\n"));
     this->listening = false;
     this->delayqueuelen = 0;
   }
 
   int DelayChannelQueue::FireQueue(){
-
-    //LOG(("[FuzzyFox][AsyncOpen]: FIRING QUEUE of %i DelayChannels",delayChannelQueue.this->delayqueuelen))
+    MutexAutoLock lock(this->queueLock);
+    if(this->delayqueuelen == 0){
+      return 0;
+    }
+    //LOG(("[FuzzyFox][DCQ]: FIRING QUEUE of %i DelayChannels for DCQ %p",delayChannelQueue.this->delayqueuelen,this));
 
     //TODO: get this from the DOM clock?
     TimeStamp ts = TimeStamp::Now();
@@ -30,22 +38,23 @@ namespace mozilla{
     }
     int fired = this->delayqueuelen;
     this->delayqueuelen = 0;
-
+    //LOG(("[FuzzyFox][DCQ]: Firing done for DCQ %p\n",this));
     return fired;
   }
 
 
   int DelayChannelQueue::QueueChannel(DelayChannel* channel){
+    MutexAutoLock lock(this->queueLock);
     if(!this->listening){
       nsCOMPtr<nsIObserverService> os = services::GetObserverService();
       
       if (os) {
-	printf("&&& DELAYCHANNELQUEUE OK\n");
+        //LOG(("[FuzzyFox][DCQ]: DCQ observing OK\n"));
 	os->AddObserver(this,"fuzzyfox-fire-outbound",false);
 	this->listening = true;
       }
       else{
-	printf("&&& FATAL CANNOT DELAYCHANNELQUEUE\n");
+	 //LOG(("[FuzzyFox][DCQ]: FATAL DCQ couldn't observe\n"));
       }
     }
 
@@ -54,7 +63,7 @@ namespace mozilla{
     ((HttpBaseChannel*)channel)->AddRef();
     this->delayqueue[this->delayqueuelen] = channel;
     this->delayqueuelen++;
-    printf("&&&& DELAY LEN %i for %p\n",this->delayqueuelen,this);
+    //LOG(("[FuzzyFox][DCQ]: Queued, new length %i for DCQ %p\n",this->delayqueuelen,this));
     return this->delayqueuelen;
   }
 
