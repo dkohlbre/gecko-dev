@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include <time.h>
 
 using namespace mozilla;
 
@@ -17,11 +18,11 @@ static LazyLogModule sPauseTaskLog("PauseTask");
 #define PT_STATIC_DURATION  80
 #define PT_STATIC_CLOCK_GRAIN 80
 
-pauseTask::pauseTask(uint32_t aDuration_us, pauseTask::tick aTickType, nsThreadPool* const aParent){
+pauseTask::pauseTask(uint32_t aDuration_us, pauseTask::tick aTickType, nsThreadPool* const aParent, int64_t aBootTimeStamp){
   this->mDuration_us = aDuration_us;
   this->mParent = aParent;
   this->mTickType = aTickType;
-
+  this->mBootTimeStamp = aBootTimeStamp;
   timeval tv;
   gettimeofday(&tv,NULL);
   this->mStartTime_us = actualTime_us();
@@ -77,7 +78,7 @@ pauseTask::Run()
   NS_DispatchToMainThread(
                     new pauseTask(this->pickDuration_us(),
                                   (this->mTickType == this->uptick)?this->downtick:this->uptick,
-                                  mParent),
+                                  mParent,mBootTimeStamp),
                     0);
 
   return NS_OK;
@@ -86,15 +87,26 @@ pauseTask::Run()
 void pauseTask::updateClocks(){
 
   int64_t timeus = actualTime_us();
+  TimeStamp ts = TimeStamp::Now();
+  timespec tv1,tv2;
+  int rv = clock_gettime(CLOCK_MONOTONIC, &tv1);
+  rv = clock_gettime(CLOCK_REALTIME, &tv2);
+
+  if(mBootTimeStamp == 0){
+    int64_t v1 = tv1.tv_nsec + (1000000000*tv1.tv_sec);
+    int64_t v2 = tv2.tv_nsec + (1000000000*tv2.tv_sec);
+    int64_t boot_delta = v2-v1;
+    printf("&&&&&&&& TV CHECK %jd %jd %jd\n", boot_delta, v1,v2);
+    mBootTimeStamp= boot_delta;
+  }
+
   int64_t grainus = getClockGrain_us();
   int64_t newTime_us = timeus - (timeus % grainus);
-
+  int64_t newTimeStamp_ns = newTime_us*1000 - mBootTimeStamp;
   // newTime_us is the new canonical time for this scope!
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  os->NotifyObservers(nullptr,"fuzzyfox-fire-outbound",NULL);
-  //TODO: Hook into the queues/etc here!
-  //TODO: Hook the DOM clock and any other clocks here!
+  os->NotifyObservers(nullptr,"fuzzyfox-fire-outbound",(char16_t*)&newTimeStamp_ns);
 }
 
 uint64_t pauseTask::pickDuration_us(){
