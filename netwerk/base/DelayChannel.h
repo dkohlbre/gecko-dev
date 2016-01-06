@@ -14,11 +14,21 @@ namespace mozilla{
   };
 
   class DelayChannelQueue : public nsIObserver{
+
+  private:
+    static const int PageLen = 128;
+    struct DelayChannelQueuePage{
+      DelayChannel* page[PageLen];
+      DelayChannelQueuePage* next;
+    };
+
+
   public:
     NS_DECL_NSIOBSERVER
 
     Mutex queueLock;
     DelayChannel* delayqueue[100];
+    DelayChannelQueuePage firstPage;
     bool listening;
     int delayqueuelen;
     DelayChannelQueue();

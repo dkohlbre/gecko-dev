@@ -28,13 +28,20 @@ namespace mozilla{
     //TODO: get this from the DOM clock?
     TimeStamp ts = TimeStamp::Now();
 
+    DelayChannelQueuePage* currentpage = &firstPage;
+    int idx = 0;
+
     for(int i=0;i<this->delayqueuelen;i++){
-      this->delayqueue[i]->delayready = true;
-      ((nsHttpChannel*)this->delayqueue[i])->AsyncOpenFinal(ts);
+      if(i % DelayChannelQueue::PageLen == 0 && i > 0){
+	currentpage = currentpage->next;
+      }
+
+      currentpage->page[i%DelayChannelQueue::PageLen]->delayready = true;
+      ((nsHttpChannel*)currentpage->page[i%DelayChannelQueue::PageLen])->AsyncOpenFinal(ts);
 
       //TODO: This should really be NS_RELEASE, but that isn't working when i use it this way
-      ((nsHttpChannel*)this->delayqueue[i])->Release();
-      this->delayqueue[i] = NULL;
+      ((nsHttpChannel*)currentpage->page[i%DelayChannelQueue::PageLen])->Release();
+      currentpage->page[i%DelayChannelQueue::PageLen] = NULL;
     }
     int fired = this->delayqueuelen;
     this->delayqueuelen = 0;
@@ -61,7 +68,30 @@ namespace mozilla{
 
 
     ((HttpBaseChannel*)channel)->AddRef();
-    this->delayqueue[this->delayqueuelen] = channel;
+    int pageidx=0;
+    int idx=this->delayqueuelen;
+    //Find the current page to queue on
+    while(this->delayqueuelen > DelayChannelQueue::PageLen){
+      pageidx++;
+      idx-=DelayChannelQueue::PageLen;
+    }
+
+    // Find the new queue spot
+    DelayChannelQueuePage* newestpage = &firstPage;
+    while(pageidx > 0 && newestpage->next != NULL){
+      pageidx--;
+      newestpage = newestpage->next;
+    }
+
+    // Check if we are making a new page
+    if(pageidx > 0){
+      newestpage->next = new DelayChannelQueuePage();//malloc(sizeof(DelayChannelQueuePage));
+      newestpage=newestpage->next;
+      newestpage->next = NULL;
+      //LOG(("[FuzzyFox][DCQ]: Had to make a new DCQ page!\n"));
+    }
+
+    newestpage->page[idx] = channel;
     this->delayqueuelen++;
     //LOG(("[FuzzyFox][DCQ]: Queued, new length %i for DCQ %p\n",this->delayqueuelen,this));
     return this->delayqueuelen;
