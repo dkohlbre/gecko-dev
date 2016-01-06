@@ -71,7 +71,7 @@ namespace mozilla{
     int pageidx=0;
     int idx=this->delayqueuelen;
     //Find the current page to queue on
-    while(this->delayqueuelen > DelayChannelQueue::PageLen){
+    while(idx >= DelayChannelQueue::PageLen){
       pageidx++;
       idx-=DelayChannelQueue::PageLen;
     }
@@ -90,7 +90,6 @@ namespace mozilla{
       newestpage->next = NULL;
       //LOG(("[FuzzyFox][DCQ]: Had to make a new DCQ page!\n"));
     }
-
     newestpage->page[idx] = channel;
     this->delayqueuelen++;
     //LOG(("[FuzzyFox][DCQ]: Queued, new length %i for DCQ %p\n",this->delayqueuelen,this));
