@@ -463,7 +463,6 @@ TimerThread::Run()
       // Fuzzyfox dkohlbre TODO fix this!
       if(mCanonicalTimeStampNS != 0){
          now = TimeStamp::FakeFromNanoseconds(mCanonicalTimeStampNS);
-         printf("&&&&&& Using fake time!\n");
       }
       nsTimerImpl* timer = nullptr;
 
