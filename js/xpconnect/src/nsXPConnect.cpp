@@ -70,6 +70,8 @@ nsXPConnect::nsXPConnect()
     char* reportableEnv = PR_GetEnv("MOZ_REPORT_ALL_JS_EXCEPTIONS");
     if (reportableEnv && *reportableEnv)
         gReportAllJSExceptions = 1;
+
+    //    mFuzzyfoxclockobserver.init(this);
 }
 
 nsXPConnect::~nsXPConnect()
@@ -170,6 +172,7 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
         info->HasAncestor(&NS_GET_IID(nsISupports), &found);
     return found;
 }
+
 
 void
 xpc::ErrorReport::Init(JSErrorReport* aReport, const char* aFallbackMessage,

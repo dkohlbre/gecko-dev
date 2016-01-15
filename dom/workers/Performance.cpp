@@ -9,6 +9,8 @@
 
 #include "WorkerPrivate.h"
 
+#include "mozilla/LockedTime.h"
+
 BEGIN_WORKERS_NAMESPACE
 
 Performance::Performance(WorkerPrivate* aWorkerPrivate)

@@ -5368,6 +5368,9 @@ JS_ClearPendingException(JSContext* cx);
 extern JS_PUBLIC_API(bool)
 JS_ReportPendingException(JSContext* cx);
 
+extern JS_PUBLIC_API(void)
+    JS_UpdateLockedClockUS(JSContext* cx, int64_t update);
+
 namespace JS {
 
 /**

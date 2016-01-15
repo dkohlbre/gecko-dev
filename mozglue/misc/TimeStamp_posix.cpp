@@ -18,6 +18,9 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "mozilla/LockedTime.h"
+#include "mozilla/LockedTimeObserver.h"
+
 #if defined(__DragonFly__) || defined(__FreeBSD__) \
     || defined(__NetBSD__) || defined(__OpenBSD__)
 #include <sys/param.h>
@@ -130,6 +133,7 @@ ClockResolutionNs()
   return minres;
 }
 
+#include "mozilla/TSLockedTime.h"
 namespace mozilla {
 
 double
@@ -200,10 +204,20 @@ TimeStamp::Shutdown()
 {
 }
 
+
+  //static FuzzyfoxClockObserver tsFuzzyfoxClockObserver;
+
+
+
 TimeStamp
 TimeStamp::Now(bool aHighResolution)
 {
-  return TimeStamp(ClockTimeNs());
+  if(TSLockedClock != NULL && TSLockedClock->clockStarted()){
+    return TimeStamp(TSLockedClock->getLockedClock()*1000);
+  }
+  else{
+    return TimeStamp(ClockTimeNs());
+  }
 }
 
 #if defined(XP_LINUX) || defined(ANDROID)
