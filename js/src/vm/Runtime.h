@@ -47,6 +47,7 @@
 #include "vm/Stack.h"
 #include "vm/Stopwatch.h"
 #include "vm/Symbol.h"
+#include "vm/Time.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -649,6 +650,10 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     // Information about the heap allocated backtrack stack used by RegExp JIT code.
     js::irregexp::RegExpStack regexpStack;
+
+    // fuzzyfox LockedClock stuff
+    LockedClock* fuzzy_LockedClock;
+    void UpdateLockedClockUS(int64_t update);
 
   private:
     friend class js::Activation;

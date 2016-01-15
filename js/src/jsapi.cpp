@@ -5587,6 +5587,12 @@ JS_ReportPendingException(JSContext* cx)
     return ok;
 }
 
+JS_PUBLIC_API(void)
+JS_UpdateLockedClockUS(JSContext* cx, int64_t update)
+{
+    cx->runtime()->UpdateLockedClockUS(update);
+}
+
 JS::AutoSaveExceptionState::AutoSaveExceptionState(JSContext* cx)
   : context(cx),
     wasPropagatingForcedReturn(cx->propagatingForcedReturn_),

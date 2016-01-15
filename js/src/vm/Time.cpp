@@ -10,11 +10,6 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
-#include "nsXPCOM.h"
-#include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
-#include "nsIObserverService.h"
-#include "nsServiceManagerUtils.h"
 
 #ifdef SOLARIS
 #define _REENTRANT 1
@@ -36,6 +31,11 @@
 
 #endif
 
+#include "mozilla/JSLockedTime.h"
+
+LockedClock*  jsTimeLockedClock;
+
+
 #ifdef XP_UNIX
 
 #ifdef _SVID_GETTOD   /* Defined only on Solaris, see Solaris <sys/types.h> */
@@ -47,68 +47,6 @@ extern int gettimeofday(struct timeval* tv);
 #endif /* XP_UNIX */
 
 using mozilla::DebugOnly;
-
-static JSLockedClock lockedClock;
-
-// Bad things for making observer service fire
-static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
-
-JSLockedClock::JSLockedClock(){
-    printf("&&&&&&&&&&&&& JSLOCKEDCLOCK CREATED\n");
-    this->currentClockUS = 0;
-    this->listening = false;
-}
-
-int64_t JSLockedClock::StartLockedClock(){
-
-    // if(!this->listening){
-    //     //nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    //     nsresult rv;
-    //     nsCOMPtr<nsIObserverService> os =
-    //         do_GetService(kObserverServiceContractID, &rv);
-    //     if (os) {
-    //         //LOG(("[FuzzyFox][JSLC]: JSLC observing OK\n"));
-    //         os->AddObserver(this,"fuzzyfox-fire-outbound",false);
-    //         this->listening = true;
-    //     }
-    //     else{
-    //         //LOG(("[FuzzyFox][JSLC]: FATAL JSLC couldn't observe\n"));
-    //     }
-    // }
-
-
-    this->currentClockUS = PRMJ_Now();
-    printf("[PauseTask][Clock] Started at %ld\n",this->currentClockUS);
-    return this->currentClockUS;
-}
-
-int64_t JSLockedClock::getLockedClock(){
-    return this->currentClockUS;
-}
-
-bool JSLockedClock::clockStarted(){
-    return this->currentClockUS != 0;
-}
-
-NS_IMETHODIMP
-JSLockedClock::Observe(nsISupports* aSubject, const char* aTopic,
-                           const char16_t* aData){
-    printf("&&&&&&& OBSERVE \n");
-    return NS_OK;
-}
-
-int64_t JSLockedClock::updateLockedClock(int64_t update){
-    this->currentClockUS += update;
-    return this->currentClockUS;
-}
-#if defined(XP_UNIX)
-int64_t JSLockedClock::checkLockedClockOffset(){
-    struct timeval tv;
-    gettimeofday(&tv,0);
-    int64_t actualTime = int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec);
-    return actualTime-this->currentClockUS;
-}
-#endif
 
 #if defined(XP_UNIX)
 int64_t
@@ -122,12 +60,16 @@ PRMJ_Now()
     gettimeofday(&tv, 0);
 #endif /* _SVID_GETTOD */
 
-    if(lockedClock.clockStarted()){
-        printf("&&&&&&&&& LOCKED FIRE\n");
-        return lockedClock.getLockedClock();
+    //    printf("&&& LOCKED WOULD BE %p\n",&lockedClock);
+
+    if(jsTimeLockedClock != NULL && jsTimeLockedClock->clockStarted()){
+        return jsTimeLockedClock->getLockedClock();
     }
-    else
+    else{
+        //        printf("&&&& NONLOCK FIRING %jd\n",int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec));
         return int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec);
+        
+    }
 }
 
 #else

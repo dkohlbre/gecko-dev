@@ -53,6 +53,9 @@
 #include "nsIXULRuntime.h"
 #include "nsJSPrincipals.h"
 
+#include "mozilla/LockedTime.h"
+#include "mozilla/LockedTimeObserver.h"
+
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
@@ -66,6 +69,8 @@ using namespace xpc;
 using namespace JS;
 using mozilla::dom::PerThreadAtomCache;
 using mozilla::dom::AutoEntryScript;
+
+#include "mozilla/TSLockedTime.h"
 
 /***************************************************************************/
 
@@ -3307,6 +3312,7 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
     xpc::WrapperFactory::Rewrap,
     xpc::WrapperFactory::PrepareForWrapping
 };
+ 
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    : CycleCollectedJSRuntime(nullptr, JS::DefaultHeapMaxBytes, JS::DefaultNurseryBytes),
@@ -3337,6 +3343,23 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
    mSlowScriptSecondHalf(false)
 {
+
+    printf("&&&&&&&&&& CREATING XPCJSRUNTIME %p\n",this);
+
+    // Init the fuzzyclock and observer
+    mFuzzyfoxclockobserver = new FuzzyfoxClockObserver();
+    this->mFuzzyfoxclockobserver->initIfNeeded();
+
+    if(jsTimeLockedClock == NULL){
+        jsTimeLockedClock = this->mFuzzyfoxclockobserver->lockedClock;
+        printf("&&&&&&&& RUNTIME XPCJSRUNTIME FIXED A CLOCK\n");
+    }
+
+    if(TSLockedClock == NULL){
+        TSLockedClock = this->mFuzzyfoxclockobserver->lockedClock;
+        printf("&&&&&&&& RUNTIME XPCJSRUNTIME FIXED A CLOCK\n");
+    }
+
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;
 

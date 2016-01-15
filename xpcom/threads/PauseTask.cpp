@@ -107,6 +107,7 @@ void pauseTask::updateClocks(){
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   os->NotifyObservers(nullptr,"fuzzyfox-fire-outbound",(char16_t*)&newTimeStamp_ns);
+  os->NotifyObservers(nullptr,"fuzzyfox-update-clocks",(char16_t*)&newTime_us);
 }
 
 uint64_t pauseTask::pickDuration_us(){

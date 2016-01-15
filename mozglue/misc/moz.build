@@ -1,8 +1,12 @@
 FINAL_LIBRARY = 'mozglue'
 
 EXPORTS.mozilla += [
+    'JSLockedTime.h',
+    'LockedTime.h',
+    'LockedTimeObserver.h',
     'StackWalk.h',
     'TimeStamp.h',
+    'TSLockedTime.h',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

@@ -7,11 +7,10 @@
 #ifndef vm_Time_h
 #define vm_Time_h
 
-#include "nsIObserverService.h"
-#include "nsIObserver.h"
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include "mozilla/LockedTime.h"
 
 /*
  * Broken down form of 64 bit time value.
@@ -32,33 +31,6 @@ struct PRMJTime {
 /* Some handy constants */
 #define PRMJ_USEC_PER_SEC       1000000L
 #define PRMJ_USEC_PER_MSEC      1000L
-
-/* Locked clock impl*/
-class JSLockedClock : public nsIObserver{
-public:
-    NS_DECL_NSIOBSERVER
-
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) override { return NS_OK;}
-
-    NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override    {
-        return 1;
-    }
-    NS_IMETHOD_(MozExternalRefCountType) Release(void) override
-    {
-        return 1;
-    }
-    JSLockedClock();
-    int64_t StartLockedClock();
-    bool clockStarted();
-    int64_t getLockedClock();
-    int64_t updateLockedClock(int64_t update);
-    int64_t checkLockedClockOffset();
-
-private:
-    int64_t currentClockUS = 0;
-    bool listening = false;
-};
-
 
 /* Return the current local time in micro-seconds */
 extern int64_t

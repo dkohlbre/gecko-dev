@@ -86,6 +86,11 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 
+#include "mozilla/LockedTime.h"
+#include "mozilla/JSLockedTime.h"
+extern LockedClock*  jsTimeLockedClock;
+#include "mozilla/LockedTimeObserver.h"
+
 #include "mozilla/dom/ScriptSettings.h"
 
 #include <math.h>
@@ -314,10 +319,13 @@ protected:
     nsXPConnect();
 
 private:
+
+
+
     // Singleton instance
     static nsXPConnect*             gSelf;
     static bool                     gOnceAliveNowDead;
-
+    
     XPCJSRuntime*                   mRuntime;
     bool                            mShuttingDown;
 
@@ -424,6 +432,10 @@ private:
 class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
+    
+    // Fuzzyfox observer stuff
+    mozilla::FuzzyfoxClockObserver*    mFuzzyfoxclockobserver;
+
     static XPCJSRuntime* newXPCJSRuntime(nsXPConnect* aXPConnect);
     static XPCJSRuntime* Get() { return nsXPConnect::XPConnect()->GetRuntime(); }
 
@@ -672,6 +684,8 @@ private:
     friend class Watchdog;
     friend class AutoLockWatchdog;
     friend class XPCIncrementalReleaseRunnable;
+
+ 
 };
 
 /***************************************************************************/

@@ -122,6 +122,8 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define CC_REQUEST_OBSERVER_TOPIC "child-cc-request"
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
 
+#define FUZZYFOX_UPDATECLOCK_OBSERVER_TOPIC "fuzzyfox-update-clocks"
+
 #define BROADCAST_ALL_WORKERS(_func, ...)                                      \
   PR_BEGIN_MACRO                                                               \
     AssertIsOnMainThread();                                                    \
@@ -894,6 +896,8 @@ public:
   {
     JSRuntime* rt = Runtime();
     MOZ_ASSERT(rt);
+
+    printf("&&&& CREATING WORKERJSRUNTIME FOR RUNTIME %p\n",aParentRuntime);
 
     JS_SetRuntimePrivate(rt, new WorkerThreadRuntimePrivate(aWorkerPrivate));
 
@@ -1888,6 +1892,10 @@ RuntimeService::Init()
     NS_WARNING("Failed to register for offline notification event!");
   }
 
+  if (NS_FAILED(obs->AddObserver(this, FUZZYFOX_UPDATECLOCK_OBSERVER_TOPIC, false))) {
+    NS_WARNING("Failed to register for fuzzyfox update clock!");
+  }
+
   MOZ_ASSERT(!gRuntimeServiceDuringInit, "This should be false!");
   gRuntimeServiceDuringInit = true;
 
@@ -2132,6 +2140,12 @@ RuntimeService::Cleanup()
                                         NS_IOSERVICE_OFFLINE_STATUS_TOPIC))) {
         NS_WARNING("Failed to unregister for offline notification event!");
       }
+
+      if (NS_FAILED(obs->RemoveObserver(this,
+                                        FUZZYFOX_UPDATECLOCK_OBSERVER_TOPIC))) {
+        NS_WARNING("Failed to unregister for offline notification event!");
+      }
+
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID);
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       mObserved = false;
@@ -2582,6 +2596,11 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
                           NS_IsAppOffline(workers[index]->GetPrincipal()));
     return NS_OK;
   }
+  if (!strcmp(aTopic, FUZZYFOX_UPDATECLOCK_OBSERVER_TOPIC)) {
+    BROADCAST_ALL_WORKERS(UpdateFuzzyClockUS, *(int64_t*)aData);
+    return NS_OK;
+  }
+
 
   NS_NOTREACHED("Unknown observer topic!");
   return NS_OK;
