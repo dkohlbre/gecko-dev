@@ -88,7 +88,6 @@
 #include "mozilla/UniquePtr.h"
 
 #include "mozilla/LockedTime.h"
-#include "mozilla/JSLockedTime.h"
 extern LockedClock*  jsTimeLockedClock;
 #include "mozilla/LockedTimeObserver.h"
 
@@ -434,7 +433,8 @@ class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 {
 public:
     // Fuzzyfox observer stuff
-    mozilla::FuzzyfoxClockObserver*    mFuzzyfoxclockobserver;
+    mozilla::FuzzyfoxClockObserver    mFuzzyfoxclockobserver;
+    LockedClock fuzzy_lockedClock;
 
     static XPCJSRuntime* newXPCJSRuntime();
 

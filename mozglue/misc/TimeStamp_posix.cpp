@@ -133,7 +133,6 @@ ClockResolutionNs()
   return minres;
 }
 
-#include "mozilla/TSLockedTime.h"
 namespace mozilla {
 
 double
@@ -212,12 +211,7 @@ TimeStamp::Shutdown()
 TimeStamp
 TimeStamp::Now(bool aHighResolution)
 {
-  if(TSLockedClock != NULL && TSLockedClock->clockStarted()){
-    return TimeStamp(TSLockedClock->getLockedClock()*1000);
-  }
-  else{
     return TimeStamp(ClockTimeNs());
-  }
 }
 
 #if defined(XP_LINUX) || defined(ANDROID)

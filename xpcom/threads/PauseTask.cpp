@@ -96,7 +96,7 @@ void pauseTask::updateClocks(){
     int64_t v1 = tv1.tv_nsec + (1000000000*tv1.tv_sec);
     int64_t v2 = tv2.tv_nsec + (1000000000*tv2.tv_sec);
     int64_t boot_delta = v2-v1;
-    printf("&&&&&&&& TV CHECK %jd %jd %jd\n", boot_delta, v1,v2);
+    LOG(("[FuzzyFox][PauseTask][Time] Boot delta %jd Monotonic %jd Realtime %jd\n", boot_delta, v1,v2));
     mBootTimeStamp= boot_delta;
   }
 

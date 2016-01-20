@@ -54,8 +54,6 @@
 #include "jscntxtinlines.h"
 #include "jsgcinlines.h"
 
-#include "mozilla/JSLockedTime.h"
-
 extern LockedClock* jsTimeLockedClock;
 
 using namespace js;
@@ -258,7 +256,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     liveRuntimesCount++;
 
 
-    printf("&&&& CREATING RUNTIME %p\n",this);
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&onNewGlobalObjectWatchers);
 
@@ -267,16 +264,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     lcovOutput.init();
 
     //fuzzyfox setup the Time lockedclock
-
-    
     if(jsTimeLockedClock == NULL){
-        fuzzy_LockedClock = new LockedClock();
-        jsTimeLockedClock = fuzzy_LockedClock;
-        printf("&&&&&&&& RUNTIME FIXED A CLOCK\n");
-    }
-    else{
-        fuzzy_LockedClock = NULL;
-        //not needed
+        jsTimeLockedClock = &fuzzy_LockedClock;
     }
 }
 
@@ -289,11 +278,7 @@ SignalBasedTriggersDisabled()
 }
 
 void JSRuntime::UpdateLockedClockUS(int64_t update){
-    if(fuzzy_LockedClock == NULL){
-        //we have no one to update
-        return;
-    }
-    fuzzy_LockedClock->updateLockedClockUS(update);
+    fuzzy_LockedClock.updateLockedClockUS(update);
 }
 
 bool
@@ -397,11 +382,6 @@ JSRuntime::~JSRuntime()
 
     fx.destroyInstance();
 
-    // fuzzyfox mark that clock as invalid
-    if(fuzzy_LockedClock != NULL){
-        jsTimeLockedClock = NULL;
-        delete fuzzy_LockedClock;
-    }
     if (gcInitialized) {
         /* Free source hook early, as its destructor may want to delete roots. */
         sourceHook = nullptr;
