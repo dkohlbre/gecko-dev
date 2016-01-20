@@ -41,12 +41,14 @@ class FuzzyfoxClockObserver : public nsIObserver{
     }
   }
 
-  void initIfNeeded(){
+  void initIfNeeded(LockedClock* aLockedClock){
     if(ready)
       return;
-    
 
-    lockedClock = new LockedClock();
+    this->ready = true;
+    
+    this->lockedClock = aLockedClock;
+
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     
     if (os) {

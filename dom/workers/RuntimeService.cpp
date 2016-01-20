@@ -897,8 +897,6 @@ public:
     JSRuntime* rt = Runtime();
     MOZ_ASSERT(rt);
 
-    printf("&&&& CREATING WORKERJSRUNTIME FOR RUNTIME %p\n",aParentRuntime);
-
     JS_SetRuntimePrivate(rt, new WorkerThreadRuntimePrivate(aWorkerPrivate));
 
     js::SetPreserveWrapperCallback(rt, PreserveWrapper);

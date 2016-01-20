@@ -70,8 +70,6 @@ using namespace JS;
 using mozilla::dom::PerThreadAtomCache;
 using mozilla::dom::AutoEntryScript;
 
-#include "mozilla/TSLockedTime.h"
-
 /***************************************************************************/
 
 const char* const XPCJSRuntime::mStrings[] = {
@@ -3344,22 +3342,11 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mSlowScriptSecondHalf(false)
 {
 
-    printf("&&&&&&&&&& CREATING XPCJSRUNTIME %p\n",this);
-
     // Init the fuzzyclock and observer
-    mFuzzyfoxclockobserver = new FuzzyfoxClockObserver();
-    this->mFuzzyfoxclockobserver->initIfNeeded();
-
     if(jsTimeLockedClock == NULL){
-        jsTimeLockedClock = this->mFuzzyfoxclockobserver->lockedClock;
-        printf("&&&&&&&& RUNTIME XPCJSRUNTIME FIXED A CLOCK\n");
+        jsTimeLockedClock = &(this->fuzzy_lockedClock);
+        this->mFuzzyfoxclockobserver.initIfNeeded(&this->fuzzy_lockedClock);
     }
-
-    if(TSLockedClock == NULL){
-        TSLockedClock = this->mFuzzyfoxclockobserver->lockedClock;
-        printf("&&&&&&&& RUNTIME XPCJSRUNTIME FIXED A CLOCK\n");
-    }
-
     // these jsids filled in later when we have a JSContext to work with.
     mStrIDs[0] = JSID_VOID;
 

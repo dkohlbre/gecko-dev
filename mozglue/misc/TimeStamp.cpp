@@ -11,7 +11,6 @@
 #include "mozilla/TimeStamp.h"
 #include <stdio.h>
 #include <string.h>
-#include "mozilla/LockedTime.h"
 
 namespace mozilla {
 

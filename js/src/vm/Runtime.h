@@ -652,7 +652,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::irregexp::RegExpStack regexpStack;
 
     // fuzzyfox LockedClock stuff
-    LockedClock* fuzzy_LockedClock;
+    LockedClock fuzzy_LockedClock;
     void UpdateLockedClockUS(int64_t update);
 
   private:

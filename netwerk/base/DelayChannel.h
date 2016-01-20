@@ -54,7 +54,6 @@ namespace mozilla{
 
 
   static int AttemptQueueChannel(DelayChannel* channel){
-    printf("&&&&& DELAYQUEUE %p\n",&delayChannelQueue);
     return delayChannelQueue.QueueChannel(channel);
   }
 

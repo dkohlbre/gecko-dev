@@ -31,8 +31,6 @@
 
 #endif
 
-#include "mozilla/JSLockedTime.h"
-
 LockedClock*  jsTimeLockedClock;
 
 
