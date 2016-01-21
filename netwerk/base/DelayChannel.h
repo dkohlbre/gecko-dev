@@ -8,7 +8,7 @@
 namespace mozilla{
   class DelayChannel{
   public:
-    DelayChannel();
+    DelayChannel() {};
     bool delayready = false;
     //NS_IMETHOD AsyncOpenFinal();
   };
@@ -27,7 +27,6 @@ namespace mozilla{
     NS_DECL_NSIOBSERVER
 
     Mutex queueLock;
-    DelayChannel* delayqueue[100];
     DelayChannelQueuePage firstPage;
     bool listening;
     int delayqueuelen;
@@ -38,11 +37,11 @@ namespace mozilla{
 
 
     //TODO fix this
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) override {}
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) override {return NS_ERROR_NO_INTERFACE;}
 
     NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override
       {
-	return 1;
+	return 2;
       }
     NS_IMETHOD_(MozExternalRefCountType) Release(void) override
       {
@@ -50,11 +49,15 @@ namespace mozilla{
       }
 
   };
-  static DelayChannelQueue delayChannelQueue;
+  static DelayChannelQueue* delayChannelQueue;
 
 
   static int AttemptQueueChannel(DelayChannel* channel){
-    return delayChannelQueue.QueueChannel(channel);
+    if(delayChannelQueue == NULL){
+      delayChannelQueue = new DelayChannelQueue();
+      delayChannelQueue->AddRef();
+    }
+    return delayChannelQueue->QueueChannel(channel);
   }
 
 }

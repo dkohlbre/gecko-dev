@@ -3,19 +3,36 @@
 
 namespace mozilla{
 
-  DelayChannel::DelayChannel(){
-    //    LOG(("[FuzzyFox][DC]DelayChannel creation!\n"));
-  }
+#define LOG printf
 
   DelayChannelQueue::~DelayChannelQueue(){
-    //    LOG(("[FuzzyFox][DCQ]DelayChannelQueue Destroyed!\n"));
-  }
-
-  DelayChannelQueue::DelayChannelQueue():
+    LOG(("[FuzzyFox][DCQ]DelayChannelQueue Destroyed!\n"));
+    if(this->listening){
+      nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+      if(os) {
+	os->RemoveObserver(this,"fuzzyfox-fire-outbound");
+      }
+    }
+  } 
+ DelayChannelQueue::DelayChannelQueue():
     queueLock("DelayChannelQueue"){
     //    LOG(("[FuzzyFox][DCQ]Creating DelayChannelQueue\n"));
     this->listening = false;
     this->delayqueuelen = 0;
+
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    
+    if (os) {
+      LOG(("[FuzzyFox][DCQ]: DCQ observing OK\n"));
+      os->AddObserver(this,"fuzzyfox-fire-outbound",false);
+      this->listening = true;
+    }
+    else{
+      LOG(("[FuzzyFox][DCQ]: FATAL DCQ couldn't observe\n"));
+    }
+
+    memset(&(this->firstPage),'\0',sizeof(DelayChannelQueuePage));
+
   }
 
   int DelayChannelQueue::FireQueue(){
@@ -29,7 +46,6 @@ namespace mozilla{
     TimeStamp ts = TimeStamp::Now();
 
     DelayChannelQueuePage* currentpage = &firstPage;
-    int idx = 0;
 
     for(int i=0;i<this->delayqueuelen;i++){
       if(i % DelayChannelQueue::PageLen == 0 && i > 0){
@@ -52,19 +68,6 @@ namespace mozilla{
 
   int DelayChannelQueue::QueueChannel(DelayChannel* channel){
     MutexAutoLock lock(this->queueLock);
-    if(!this->listening){
-      nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-      
-      if (os) {
-        //LOG(("[FuzzyFox][DCQ]: DCQ observing OK\n"));
-	os->AddObserver(this,"fuzzyfox-fire-outbound",false);
-	this->listening = true;
-      }
-      else{
-	 //LOG(("[FuzzyFox][DCQ]: FATAL DCQ couldn't observe\n"));
-      }
-    }
-
 
 
     ((HttpBaseChannel*)channel)->AddRef();
@@ -85,7 +88,8 @@ namespace mozilla{
 
     // Check if we are making a new page
     if(pageidx > 0){
-      newestpage->next = new DelayChannelQueuePage();//malloc(sizeof(DelayChannelQueuePage));
+      newestpage->next = new DelayChannelQueuePage();
+      memset(&(newestpage),'\0',sizeof(DelayChannelQueuePage));      
       newestpage=newestpage->next;
       newestpage->next = NULL;
       //LOG(("[FuzzyFox][DCQ]: Had to make a new DCQ page!\n"));

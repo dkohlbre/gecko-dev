@@ -36,6 +36,7 @@ class pauseTask :
   uint64_t pickDuration_us();
   static int64_t actualTime_us();
   int64_t mBootTimeStamp;
+  int64_t roundToGrain_us(int64_t aValue);
 };
 
 

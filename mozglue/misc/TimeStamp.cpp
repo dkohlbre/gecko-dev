@@ -44,6 +44,8 @@ struct TimeStampInitialization
   };
 };
 
+static   int64_t CanonicalNow;
+
 static TimeStampInitialization sInitOnce;
 
 MFBT_API TimeStamp
@@ -88,5 +90,19 @@ TimeStamp::RecordProcessRestart()
 {
   sInitOnce.mProcessCreation = TimeStamp();
 }
+
+MFBT_API TimeStamp TimeStamp::Now_fuzzy(TimeStampValue aValue) {
+    if(CanonicalNow > 0){
+      return TimeStamp(CanonicalNow,true);
+    }
+    else{
+      return TimeStamp(aValue);
+    }
+  }
+MFBT_API void TimeStamp::UpdateFuzzyTimeStamp(int64_t aValue){ CanonicalNow = aValue; }
+
+
+
+
 
 } // namespace mozilla
