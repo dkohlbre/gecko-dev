@@ -54,6 +54,7 @@
 #include "mozilla/TimeStamp.h"
 #include <pthread.h>
 
+
 // Estimate of the smallest duration of time we can measure.
 static uint64_t sResolution;
 static uint64_t sResolutionSigDigs;
@@ -63,6 +64,7 @@ static const uint64_t kNsPerMs   =    1000000;
 static const uint64_t kNsPerSec  = 1000000000;
 static const double kNsPerMsd    =    1000000.0;
 static const double kNsPerSecd   = 1000000000.0;
+
 
 static uint64_t
 TimespecToNs(const struct timespec& aTs)
@@ -204,14 +206,11 @@ TimeStamp::Shutdown()
 }
 
 
-  //static FuzzyfoxClockObserver tsFuzzyfoxClockObserver;
-
-
 
 TimeStamp
 TimeStamp::Now(bool aHighResolution)
 {
-    return TimeStamp(ClockTimeNs());
+  return TimeStamp::Now_fuzzy(ClockTimeNs());
 }
 
 #if defined(XP_LINUX) || defined(ANDROID)

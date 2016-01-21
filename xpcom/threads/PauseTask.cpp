@@ -84,10 +84,17 @@ pauseTask::Run()
   return NS_OK;
 }
 
+int64_t pauseTask::roundToGrain_us(int64_t aValue){
+  int64_t grain = getClockGrain_us();
+  return aValue-(aValue%grain);
+}
+
+#define US_TO_NS(x) (x*1000)
+#define NS_TO_US(x) (x/1000)
+
 void pauseTask::updateClocks(){
 
   int64_t timeus = actualTime_us();
-  TimeStamp ts = TimeStamp::Now();
   timespec tv1,tv2;
   int rv = clock_gettime(CLOCK_MONOTONIC, &tv1);
   rv = clock_gettime(CLOCK_REALTIME, &tv2);
@@ -97,16 +104,22 @@ void pauseTask::updateClocks(){
     int64_t v2 = tv2.tv_nsec + (1000000000*tv2.tv_sec);
     int64_t boot_delta = v2-v1;
     LOG(("[FuzzyFox][PauseTask][Time] Boot delta %jd Monotonic %jd Realtime %jd\n", boot_delta, v1,v2));
-    mBootTimeStamp= boot_delta;
+    mBootTimeStamp= US_TO_NS(roundToGrain_us(NS_TO_US(boot_delta)));
   }
 
   int64_t grainus = getClockGrain_us();
-  int64_t newTime_us = timeus - (timeus % grainus);
-  int64_t newTimeStamp_ns = newTime_us*1000 - mBootTimeStamp;
+  int64_t newTime_us = roundToGrain_us(timeus);
+  int64_t newTimeStamp_ns = US_TO_NS(newTime_us) - mBootTimeStamp;
   // newTime_us is the new canonical time for this scope!
+  LOG(("[FuzzyFox][PauseTask][Time] New time is %jn, monotonic time is %jn\n", newTimeStamp_ns,tv1.tv_nsec + (1000000000*tv1.tv_sec)));
 
+  // Update the timestamp canonicaltime
+   TimeStamp::UpdateFuzzyTimeStamp(newTimeStamp_ns);
+  // Fire notifications
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  // Event firings get the new fake timestamp
   os->NotifyObservers(nullptr,"fuzzyfox-fire-outbound",(char16_t*)&newTimeStamp_ns);
+  // Clocks get the official 'realtime' time
   os->NotifyObservers(nullptr,"fuzzyfox-update-clocks",(char16_t*)&newTime_us);
 }
 

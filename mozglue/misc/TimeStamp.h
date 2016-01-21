@@ -26,6 +26,7 @@ template<typename T> struct ParamTraits;
 
 namespace mozilla {
 
+
 #ifndef XP_WIN
 typedef uint64_t TimeStampValue;
 #endif
@@ -392,11 +393,14 @@ typedef BaseTimeDuration<TimeDurationValueCalculator> TimeDuration;
 class TimeStamp
 {
 public:
+
   /**
    * Initialize to the "null" moment
    */
-  MOZ_CONSTEXPR TimeStamp() : mValue(0) {}
+  MOZ_CONSTEXPR TimeStamp() : usedCanonicalNow(false),mValue(0) {}
   // Default copy-constructor and assignment are OK
+
+  bool usedCanonicalNow;
 
   /**
    * The system timestamps are the same as the TimeStamp
@@ -451,6 +455,9 @@ public:
    */
   static TimeStamp Now() { return Now(true); }
   static TimeStamp NowLoRes() { return Now(false); }
+
+  static MFBT_API TimeStamp Now_fuzzy(TimeStampValue aValue);
+  static MFBT_API void UpdateFuzzyTimeStamp(int64_t aValue);
 
   /**
    * Return a timestamp representing the time when the current process was
@@ -576,11 +583,16 @@ public:
   static MFBT_API void Startup();
   static MFBT_API void Shutdown();
 
+
+
 private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
   friend void StartupTimelineRecordExternal(int, uint64_t);
 
+
+
   MOZ_IMPLICIT TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
+  MOZ_IMPLICIT TimeStamp(TimeStampValue aValue,bool aUsedCanonicalNow) : usedCanonicalNow(aUsedCanonicalNow),mValue(aValue) {}
 
   static MFBT_API TimeStamp Now(bool aHighResolution);
 
@@ -609,6 +621,7 @@ private:
    */
   TimeStampValue mValue;
 };
+
 
 } // namespace mozilla
 

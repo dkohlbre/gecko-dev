@@ -499,8 +499,11 @@ private:
       } else {
         mLastChildTick = TimeStamp::Now();
       }
-      MOZ_ASSERT(aVsyncTimestamp <= TimeStamp::Now());
-
+      TimeStamp rightnow = TimeStamp::Now();
+      //fuzzyfox hackyness in the case of moving between canonical and noncanonical time
+      if(rightnow.usedCanonicalNow ==  aVsyncTimestamp.usedCanonicalNow){
+        MOZ_ASSERT(aVsyncTimestamp <= rightnow);
+      }
       // We might have a problem that we call ~VsyncRefreshDriverTimer() before
       // the scheduled TickRefreshDriver() runs. Check mVsyncRefreshDriverTimer
       // before use.
