@@ -420,12 +420,6 @@ public:
   }
 #endif
 
-  //dkohlbre fuzzyfox
-  // Created as a hack for now
-  static TimeStamp FakeFromNanoseconds(int64_t aNS){
-    return TimeStamp(aNS);
-  }
-
   /**
    * Return true if this is the "null" moment
    */

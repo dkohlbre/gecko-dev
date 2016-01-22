@@ -79,9 +79,6 @@ private:
   bool mSleeping;
 
   nsTArray<nsTimerImpl*> mTimers;
-
-  // Added for fuzzyfox 
-  int64_t mCanonicalTimeStampNS;
 };
 
 struct TimerAdditionComparator
