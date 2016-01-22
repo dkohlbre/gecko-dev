@@ -6,7 +6,7 @@ namespace mozilla{
 #define LOG printf
 
   DelayChannelQueue::~DelayChannelQueue(){
-    LOG(("[FuzzyFox][DCQ]DelayChannelQueue Destroyed!\n"));
+    //    LOG(("[FuzzyFox][DCQ]DelayChannelQueue Destroyed!\n"));
     if(this->listening){
       nsCOMPtr<nsIObserverService> os = services::GetObserverService();
       if(os) {
@@ -23,12 +23,12 @@ namespace mozilla{
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     
     if (os) {
-      LOG(("[FuzzyFox][DCQ]: DCQ observing OK\n"));
+      //      LOG(("[FuzzyFox][DCQ]: DCQ observing OK\n"));
       os->AddObserver(this,"fuzzyfox-fire-outbound",false);
       this->listening = true;
     }
     else{
-      LOG(("[FuzzyFox][DCQ]: FATAL DCQ couldn't observe\n"));
+      //      LOG(("[FuzzyFox][DCQ]: FATAL DCQ couldn't observe\n"));
     }
 
     memset(&(this->firstPage),'\0',sizeof(DelayChannelQueuePage));
