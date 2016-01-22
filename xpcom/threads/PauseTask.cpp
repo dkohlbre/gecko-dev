@@ -15,8 +15,8 @@ static LazyLogModule sPauseTaskLog("PauseTask");
 #endif
 #define LOG(args) MOZ_LOG(sPauseTaskLog, mozilla::LogLevel::Debug, args)
 
-#define PT_STATIC_DURATION  80*1000
-#define PT_STATIC_CLOCK_GRAIN 80*1000
+#define PT_STATIC_DURATION  50*1000
+#define PT_STATIC_CLOCK_GRAIN 50*1000
 
 pauseTask::pauseTask(uint32_t aDuration_us, pauseTask::tick aTickType, nsThreadPool* const aParent, int64_t aBootTimeStamp){
   this->mDuration_us = aDuration_us;
@@ -36,6 +36,9 @@ int64_t pauseTask::actualTime_us(){
 }
 
 
+#define US_TO_NS(x) (x*1000)
+#define NS_TO_US(x) (x/1000)
+
 NS_IMETHODIMP
 pauseTask::Run()
 {
@@ -51,6 +54,7 @@ pauseTask::Run()
     uint64_t over_us = (endTime_us-this->mStartTime_us)-this->mDuration_us;
     LOG(("[FuzzyFox][PauseTaskEvent] PT(%p) TP(%p) Overran budget of %" PRIu64 " by %" PRIu64 " \n", this,mParent,this->mDuration_us,over_us));
 
+    //TODO: this should probably influence uptick/downtick stuff, and it doesn't
     uint64_t nextDuration_us = this->pickDuration_us();
     while(over_us > nextDuration_us){
       durationCount++;
@@ -70,6 +74,8 @@ pauseTask::Run()
   // Sleep for now
   usleep(remaining_us);
 
+  //TODO we slept extra long almost certainly, what do we do about that?
+
   // Update clocks (and fire pending events etc)
   updateClocks();
 
@@ -88,9 +94,6 @@ int64_t pauseTask::roundToGrain_us(int64_t aValue){
   int64_t grain = getClockGrain_us();
   return aValue-(aValue%grain);
 }
-
-#define US_TO_NS(x) (x*1000)
-#define NS_TO_US(x) (x/1000)
 
 void pauseTask::updateClocks(){
 
@@ -116,9 +119,12 @@ void pauseTask::updateClocks(){
    TimeStamp::UpdateFuzzyTimeStamp(newTimeStamp_ns);
   // Fire notifications
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  // Event firings get the new fake timestamp
-  os->NotifyObservers(nullptr,"fuzzyfox-fire-outbound",(char16_t*)&newTimeStamp_ns);
+  // Event firings on occur on downticks and have no data
+  if(this->mTickType == this->downtick){
+    os->NotifyObservers(nullptr,"fuzzyfox-fire-outbound",nullptr);
+  }
   // Clocks get the official 'realtime' time
+  // This happens on all ticks
   os->NotifyObservers(nullptr,"fuzzyfox-update-clocks",(char16_t*)&newTime_us);
 }
 
