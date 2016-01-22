@@ -15,8 +15,8 @@ static LazyLogModule sPauseTaskLog("PauseTask");
 #endif
 #define LOG(args) MOZ_LOG(sPauseTaskLog, mozilla::LogLevel::Debug, args)
 
-#define PT_STATIC_DURATION  80
-#define PT_STATIC_CLOCK_GRAIN 80
+#define PT_STATIC_DURATION  80*1000
+#define PT_STATIC_CLOCK_GRAIN 80*1000
 
 pauseTask::pauseTask(uint32_t aDuration_us, pauseTask::tick aTickType, nsThreadPool* const aParent, int64_t aBootTimeStamp){
   this->mDuration_us = aDuration_us;
@@ -107,7 +107,6 @@ void pauseTask::updateClocks(){
     mBootTimeStamp= US_TO_NS(roundToGrain_us(NS_TO_US(boot_delta)));
   }
 
-  int64_t grainus = getClockGrain_us();
   int64_t newTime_us = roundToGrain_us(timeus);
   int64_t newTimeStamp_ns = US_TO_NS(newTime_us) - mBootTimeStamp;
   // newTime_us is the new canonical time for this scope!

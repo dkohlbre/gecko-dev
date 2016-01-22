@@ -31,8 +31,7 @@ TimerThread::TimerThread() :
   mShutdown(false),
   mWaiting(false),
   mNotified(false),
-  mSleeping(false),
-  mCanonicalTimeStampNS(0)
+  mSleeping(false)
 {
 }
 
@@ -75,7 +74,6 @@ TimerObserverRunnable::Run()
     observerService->AddObserver(mObserver, "wake_notification", false);
     observerService->AddObserver(mObserver, "suspend_process_notification", false);
     observerService->AddObserver(mObserver, "resume_process_notification", false);
-    observerService->AddObserver(mObserver, "fuzzyfox-fire-outbound", false);
   }
   return NS_OK;
 }
@@ -458,12 +456,6 @@ TimerThread::Run()
     } else {
       waitFor = PR_INTERVAL_NO_TIMEOUT;
       TimeStamp now = TimeStamp::Now();
-
-      // Use the current fuzzyfox canonical time if available
-      // Fuzzyfox dkohlbre TODO fix this!
-      if(mCanonicalTimeStampNS != 0){
-         now = TimeStamp::FakeFromNanoseconds(mCanonicalTimeStampNS);
-      }
       nsTimerImpl* timer = nullptr;
 
       if (!mTimers.IsEmpty()) {
@@ -517,9 +509,7 @@ TimerThread::Run()
 
           // Update now, as PostTimerEvent plus the locking may have taken a
           // tick or two, and we may goto next below.
-          // fuzzyfox may be overriding the time
-          if(mCanonicalTimeStampNS == 0)
-            now = TimeStamp::Now();
+          now = TimeStamp::Now();
         }
       }
 
@@ -791,16 +781,14 @@ TimerThread::DoAfterSleep()
 
 NS_IMETHODIMP
 TimerThread::Observe(nsISupports* /* aSubject */, const char* aTopic,
-                     const char16_t* aData ){
+                     const char16_t* /* aData */)
+{
   if (strcmp(aTopic, "sleep_notification") == 0 ||
       strcmp(aTopic, "suspend_process_notification") == 0) {
     DoBeforeSleep();
   } else if (strcmp(aTopic, "wake_notification") == 0 ||
              strcmp(aTopic, "resume_process_notification") == 0) {
     DoAfterSleep();
-  } else if (strcmp(aTopic, "fuzzyfox-fire-outbound") == 0){
-    mCanonicalTimeStampNS = *(int64_t*)aData;
-    
   }
 
   return NS_OK;
