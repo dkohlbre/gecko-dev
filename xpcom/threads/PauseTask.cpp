@@ -15,8 +15,8 @@ static LazyLogModule sPauseTaskLog("PauseTask");
 #endif
 #define LOG(args) MOZ_LOG(sPauseTaskLog, mozilla::LogLevel::Debug, args)
 
-#define PT_STATIC_DURATION  50*1000
-#define PT_STATIC_CLOCK_GRAIN 50*1000
+#define PT_DURATION_CENTER  150
+#define PT_STATIC_CLOCK_GRAIN PT_DURATION_CENTER
 
 pauseTask::pauseTask(uint32_t aDuration_us, pauseTask::tick aTickType, nsThreadPool* const aParent, int64_t aBootTimeStamp){
   this->mDuration_us = aDuration_us;
@@ -81,11 +81,13 @@ pauseTask::Run()
 
 
   // Queue next event
-  NS_DispatchToMainThread(
+  while(NS_FAILED(NS_DispatchToMainThread(
                     new pauseTask(this->pickDuration_us(),
                                   (this->mTickType == this->uptick)?this->downtick:this->uptick,
                                   mParent,mBootTimeStamp),
-                    0);
+                    0))){
+    LOG(("[FuzzyFox][PauseTaskEvent] FATAL Unable to schedule next PauseTaskEvent! Retrying!\n"));
+  }
 
   return NS_OK;
 }
@@ -106,14 +108,14 @@ void pauseTask::updateClocks(){
     int64_t v1 = tv1.tv_nsec + (1000000000*tv1.tv_sec);
     int64_t v2 = tv2.tv_nsec + (1000000000*tv2.tv_sec);
     int64_t boot_delta = v2-v1;
-    LOG(("[FuzzyFox][PauseTask][Time] Boot delta %jd Monotonic %jd Realtime %jd\n", boot_delta, v1,v2));
+    LOG(("[FuzzyFox][PauseTask][Time] Boot delta %" PRIu64 " Monotonic %" PRIu64 " Realtime %" PRIu64 "\n", boot_delta, v1,v2));
     mBootTimeStamp= US_TO_NS(roundToGrain_us(NS_TO_US(boot_delta)));
   }
 
   int64_t newTime_us = roundToGrain_us(timeus);
   int64_t newTimeStamp_ns = US_TO_NS(newTime_us) - mBootTimeStamp;
   // newTime_us is the new canonical time for this scope!
-  LOG(("[FuzzyFox][PauseTask][Time] New time is %jn, monotonic time is %jn\n", newTimeStamp_ns,tv1.tv_nsec + (1000000000*tv1.tv_sec)));
+  LOG(("[FuzzyFox][PauseTask][Time] New time is %" PRIu64 ", monotonic time is %" PRIu64 "\n", newTimeStamp_ns,tv1.tv_nsec + (1000000000*tv1.tv_sec)));
 
   // Update the timestamp canonicaltime
    TimeStamp::UpdateFuzzyTimeStamp(newTimeStamp_ns);
@@ -129,9 +131,8 @@ void pauseTask::updateClocks(){
 }
 
 uint64_t pauseTask::pickDuration_us(){
-  // Static for now
-  // Some normal distribution centered on a configurable value
-  return PT_STATIC_DURATION;
+
+  return PT_DURATION_CENTER;
 }
 
 int64_t pauseTask::getClockGrain_us(){
