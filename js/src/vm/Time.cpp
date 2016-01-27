@@ -60,14 +60,8 @@ PRMJ_Now()
 
     //    printf("&&& LOCKED WOULD BE %p\n",&lockedClock);
 
-    if(jsTimeLockedClock != NULL && jsTimeLockedClock->clockStarted()){
-        return jsTimeLockedClock->getLockedClock();
-    }
-    else{
         //        printf("&&&& NONLOCK FIRING %jd\n",int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec));
-        return int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec);
-        
-    }
+    return int64_t(tv.tv_sec) * PRMJ_USEC_PER_SEC + int64_t(tv.tv_usec);
 }
 
 #else

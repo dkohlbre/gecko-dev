@@ -1890,9 +1890,6 @@ RuntimeService::Init()
     NS_WARNING("Failed to register for offline notification event!");
   }
 
-  if (NS_FAILED(obs->AddObserver(this, FUZZYFOX_UPDATECLOCK_OBSERVER_TOPIC, false))) {
-    NS_WARNING("Failed to register for fuzzyfox update clock!");
-  }
 
   MOZ_ASSERT(!gRuntimeServiceDuringInit, "This should be false!");
   gRuntimeServiceDuringInit = true;

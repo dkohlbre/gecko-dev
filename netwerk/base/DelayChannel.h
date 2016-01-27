@@ -3,7 +3,6 @@
 
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
-#include "mozilla/Mutex.h"
 
 namespace mozilla{
   class DelayChannel{
@@ -26,7 +25,6 @@ namespace mozilla{
   public:
     NS_DECL_NSIOBSERVER
 
-    Mutex queueLock;
     DelayChannelQueuePage firstPage;
     bool listening;
     int delayqueuelen;
@@ -52,13 +50,6 @@ namespace mozilla{
   static DelayChannelQueue* delayChannelQueue;
 
 
-  static int AttemptQueueChannel(DelayChannel* channel){
-    if(delayChannelQueue == NULL){
-      delayChannelQueue = new DelayChannelQueue();
-      delayChannelQueue->AddRef();
-    }
-    return delayChannelQueue->QueueChannel(channel);
-  }
 
 }
 #endif /* _DelayChannel_h */

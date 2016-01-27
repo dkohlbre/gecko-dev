@@ -48,17 +48,6 @@ class FuzzyfoxClockObserver : public nsIObserver{
     this->ready = true;
     
     this->lockedClock = aLockedClock;
-
-    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    
-    if (os) {
-      //LOG(("[FuzzyFox][FCO]: FCO observing OK\n"));
-      os->AddObserver(this,"fuzzyfox-update-clocks",false);
-    }
-    else{
-      //LOG(("[FuzzyFox][FCO]: FATAL FCO couldn't observe\n"));
-      printf("&&&&&&&& FATAL FCO DIDNT SUBSCRIBE!\n");
-    }
   }
   
   nsresult Observe(nsISupports* aSubject, const char* aTopic,

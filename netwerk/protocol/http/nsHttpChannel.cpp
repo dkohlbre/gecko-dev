@@ -5051,19 +5051,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     mListener = listener;
     mListenerContext = context;
 
-    // PauseTask/DelayChannel queuing
-    
-    AttemptQueueChannel(this);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::AsyncOpenFinal(TimeStamp ts){
-    // Added due to PauseTask/DelayChannel
-
-    nsresult rv;
-
     // add ourselves to the load group.  from this point forward, we'll report
     // all failures asynchronously.
     if (mLoadGroup)
@@ -5073,7 +5060,7 @@ nsHttpChannel::AsyncOpenFinal(TimeStamp ts){
     // don't want it after OnModifyRequest() weighs in. But waiting for
     // that to complete would mean we don't include proxy resolution in the
     // timing.
-    mAsyncOpenTime = ts;
+    mAsyncOpenTime = TimeStamp::Now();
 
     // the only time we would already know the proxy information at this
     // point would be if we were proxying a non-http protocol like ftp

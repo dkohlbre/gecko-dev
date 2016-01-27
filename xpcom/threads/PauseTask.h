@@ -24,9 +24,6 @@ class pauseTask :
   NS_IMETHOD Run() override;
 
 
-  void updateClocks();
-  int64_t getClockGrain_us();
-
  private:
   friend class mozilla::TimeStamp;
   tick mTickType;

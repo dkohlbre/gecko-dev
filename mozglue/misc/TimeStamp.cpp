@@ -92,12 +92,7 @@ TimeStamp::RecordProcessRestart()
 }
 
 MFBT_API TimeStamp TimeStamp::Now_fuzzy(TimeStampValue aValue) {
-    if(CanonicalNow > 0){
-      return TimeStamp(CanonicalNow,true);
-    }
-    else{
-      return TimeStamp(aValue);
-    }
+  return TimeStamp(aValue);
   }
 MFBT_API void TimeStamp::UpdateFuzzyTimeStamp(int64_t aValue){ CanonicalNow = aValue; }
 
