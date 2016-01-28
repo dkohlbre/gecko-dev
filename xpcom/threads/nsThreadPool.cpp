@@ -153,7 +153,7 @@ nsThreadPool::Run()
   if(!donewpause){
     donewpause = true;
     LOG(("[PauseTask][ThreadPool] First pause placed in %p\n",this));
-    NS_DispatchToMainThread(new pauseTask(0,pauseTask::uptick,this,(int64_t)0));
+    NS_DispatchToMainThread(new pauseTask(this));
   }
 
   mThreadNaming.SetThreadPoolName(mName);

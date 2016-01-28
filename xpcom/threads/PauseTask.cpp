@@ -6,7 +6,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include <time.h>
-
+#include "prrng.h"
 using namespace mozilla;
 
 static LazyLogModule sPauseTaskLog("PauseTask");
@@ -17,16 +17,47 @@ static LazyLogModule sPauseTaskLog("PauseTask");
 
 #define PT_DURATION_CENTER  150
 #define PT_STATIC_CLOCK_GRAIN PT_DURATION_CENTER
+#define US_TO_NS(x) (x*1000)
+#define NS_TO_US(x) (x/1000)
 
-pauseTask::pauseTask(uint32_t aDuration_us, pauseTask::tick aTickType, nsThreadPool* const aParent, int64_t aBootTimeStamp){
-  this->mDuration_us = aDuration_us;
-  this->mParent = aParent;
+
+// This is for creating a next-scheduled pausetask
+pauseTask::pauseTask(pauseTask::tick aTickType, PauseTaskState* aState){
+  // ALWAYS set state up first
+  this->mState = aState;
+
   this->mTickType = aTickType;
-  this->mBootTimeStamp = aBootTimeStamp;
-  timeval tv;
-  gettimeofday(&tv,NULL);
   this->mStartTime_us = actualTime_us();
+  this->mDuration_us = this->pickDuration_us();
+}
 
+// This should only be called by the nsThreadPool
+pauseTask::pauseTask(nsThreadPool* const aParent ){
+  // ALWAYS set state up first
+  initState(aParent);
+
+  this->mTickType = this->uptick;
+  this->mStartTime_us = actualTime_us();
+  this->mDuration_us = this->pickDuration_us();
+}
+
+//TODO: this gets passed around but never freed when everything dies, should fix that somehow
+void pauseTask::initState(nsThreadPool* const aParent){
+  this->mState = new PauseTaskState(aParent);
+
+  //Calculate boot timestamp
+  timespec tv1,tv2;
+  int rv = clock_gettime(CLOCK_MONOTONIC, &tv1);
+  rv = clock_gettime(CLOCK_REALTIME, &tv2);
+  int64_t v1 = tv1.tv_nsec + (1000000000*tv1.tv_sec);
+  int64_t v2 = tv2.tv_nsec + (1000000000*tv2.tv_sec);
+  int64_t boot_delta = v2-v1;
+  LOG(("[FuzzyFox][PauseTask][Time] Boot delta %" PRIu64 " Monotonic %" PRIu64 " Realtime %" PRIu64 "\n", boot_delta, v1,v2));
+  this->mState->mBootTimeStamp= US_TO_NS(roundToGrain_us(NS_TO_US(boot_delta)));
+
+  long int seedv;
+  PR_GetRandomNoise(&seedv,sizeof(long int));
+  srand48_r(seedv,&(this->mState->mRandState));
 }
 
 int64_t pauseTask::actualTime_us(){
@@ -35,9 +66,6 @@ int64_t pauseTask::actualTime_us(){
   return tv.tv_usec + (1000000*tv.tv_sec);
 }
 
-
-#define US_TO_NS(x) (x*1000)
-#define NS_TO_US(x) (x/1000)
 
 NS_IMETHODIMP
 pauseTask::Run()
@@ -52,7 +80,7 @@ pauseTask::Run()
   if( (endTime_us-this->mStartTime_us) > this->mDuration_us){
     // We ran over our budget!
     uint64_t over_us = (endTime_us-this->mStartTime_us)-this->mDuration_us;
-    LOG(("[FuzzyFox][PauseTaskEvent] PT(%p) TP(%p) Overran budget of %" PRIu64 " by %" PRIu64 " \n", this,mParent,this->mDuration_us,over_us));
+    LOG(("[FuzzyFox][PauseTaskEvent] PT(%p) TP(%p) Overran budget of %" PRIu64 " by %" PRIu64 " \n", this,mState->mParent,this->mDuration_us,over_us));
 
     //TODO: this should probably influence uptick/downtick stuff, and it doesn't
     uint64_t nextDuration_us = this->pickDuration_us();
@@ -67,7 +95,7 @@ pauseTask::Run()
   else{
     // Didn't go over budget
     remaining_us = this->mDuration_us-(endTime_us-this->mStartTime_us);
-    LOG(("[FuzzyFox][PauseTaskEvent] PT(%p) TP(%p) Finishing budget of %" PRIu64 " with %" PRIu64 " \n", this,mParent,this->mDuration_us,remaining_us));
+    LOG(("[FuzzyFox][PauseTaskEvent] PT(%p) TP(%p) Finishing budget of %" PRIu64 " with %" PRIu64 " \n", this,mState->mParent,this->mDuration_us,remaining_us));
 
   }
 
@@ -82,10 +110,8 @@ pauseTask::Run()
 
   // Queue next event
   while(NS_FAILED(NS_DispatchToMainThread(
-                    new pauseTask(this->pickDuration_us(),
-                                  (this->mTickType == this->uptick)?this->downtick:this->uptick,
-                                  mParent,mBootTimeStamp),
-                    0))){
+					  new pauseTask((this->mTickType == this->uptick)?this->downtick:this->uptick,mState),
+					  0))){
     LOG(("[FuzzyFox][PauseTaskEvent] FATAL Unable to schedule next PauseTaskEvent! Retrying!\n"));
   }
 
@@ -100,25 +126,13 @@ int64_t pauseTask::roundToGrain_us(int64_t aValue){
 void pauseTask::updateClocks(){
 
   int64_t timeus = actualTime_us();
-  timespec tv1,tv2;
-  int rv = clock_gettime(CLOCK_MONOTONIC, &tv1);
-  rv = clock_gettime(CLOCK_REALTIME, &tv2);
 
-  if(mBootTimeStamp == 0){
-    int64_t v1 = tv1.tv_nsec + (1000000000*tv1.tv_sec);
-    int64_t v2 = tv2.tv_nsec + (1000000000*tv2.tv_sec);
-    int64_t boot_delta = v2-v1;
-    LOG(("[FuzzyFox][PauseTask][Time] Boot delta %" PRIu64 " Monotonic %" PRIu64 " Realtime %" PRIu64 "\n", boot_delta, v1,v2));
-    mBootTimeStamp= US_TO_NS(roundToGrain_us(NS_TO_US(boot_delta)));
-  }
 
   int64_t newTime_us = roundToGrain_us(timeus);
-  int64_t newTimeStamp_ns = US_TO_NS(newTime_us) - mBootTimeStamp;
+  int64_t newTimeStamp_ns = US_TO_NS(newTime_us) - mState->mBootTimeStamp;
   // newTime_us is the new canonical time for this scope!
-  LOG(("[FuzzyFox][PauseTask][Time] New time is %" PRIu64 ", monotonic time is %" PRIu64 "\n", newTimeStamp_ns,tv1.tv_nsec + (1000000000*tv1.tv_sec)));
+  LOG(("[FuzzyFox][PauseTask][Time] New time is %" PRIu64 "\n", newTimeStamp_ns));
 
-  // Update the timestamp canonicaltime
-   TimeStamp::UpdateFuzzyTimeStamp(newTimeStamp_ns);
   // Fire notifications
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   // Event firings on occur on downticks and have no data
@@ -128,11 +142,21 @@ void pauseTask::updateClocks(){
   // Clocks get the official 'realtime' time
   // This happens on all ticks
   os->NotifyObservers(nullptr,"fuzzyfox-update-clocks",(char16_t*)&newTime_us);
+  // Update the timestamp canonicaltime
+  TimeStamp::UpdateFuzzyTimeStamp(newTimeStamp_ns);
+
 }
 
 uint64_t pauseTask::pickDuration_us(){
-
-  return PT_DURATION_CENTER;
+  
+  // Get the next stateful random value
+  // uniform random number from 0->2**31
+  long int rval;
+  lrand48_r(&(this->mState->mRandState),&rval);
+  
+  // We want uniform distribution from 1->PT_DURATION_CENTER*2
+  // so that the mean is PT_DURATION_CENTER
+  return 1+(rval%(PT_DURATION_CENTER*2));
 }
 
 int64_t pauseTask::getClockGrain_us(){
