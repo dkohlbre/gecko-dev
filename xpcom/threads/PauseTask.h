@@ -15,12 +15,22 @@
 class pauseTask :
   public nsRunnable
 {
+ private:
+  class PauseTaskState{
+  public:
+    PauseTaskState(nsThreadPool* const aParent) {mParent = aParent;}
+    nsThreadPool* mParent;
+    int64_t mBootTimeStamp;
+    struct drand48_data mRandState;
+
+  };
 
 
  public:
   enum tick {uptick,downtick};
 
-  pauseTask(uint32_t aDuration_us, pauseTask::tick aTickType, nsThreadPool * const aParent,int64_t aBootTimeStamp);
+  pauseTask(nsThreadPool * const aParent);
+
   NS_IMETHOD Run() override;
 
 
@@ -28,15 +38,17 @@ class pauseTask :
   int64_t getClockGrain_us();
 
  private:
+  pauseTask(pauseTask::tick aTickType, PauseTaskState* aState);
   friend class mozilla::TimeStamp;
+
+  PauseTaskState* mState;
   tick mTickType;
   uint32_t mDuration_us;
   uint64_t mStartTime_us;
-  nsThreadPool* mParent;
   uint64_t pickDuration_us();
   static int64_t actualTime_us();
-  int64_t mBootTimeStamp;
   int64_t roundToGrain_us(int64_t aValue);
+  void initState(nsThreadPool* const aParent);
 };
 
 
