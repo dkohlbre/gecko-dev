@@ -29,6 +29,8 @@ private:
   void InsertUserEntry(PerformanceEntry* aEntry) override;
 
   WorkerPrivate* mWorkerPrivate;
+  double mGrain;
+  static const double kDefaultGrain;
 
 public:
   JSObject*
@@ -36,6 +38,17 @@ public:
 
   // WebIDL (public APIs)
   DOMHighResTimeStamp Now() const override;
+
+  double Grain(){
+    return mGrain;
+  }
+  void SetGrain(double grain)
+  {
+    if (grain > 0) {
+      mGrain =grain;
+    }
+  }
+  double Nowish() const;
 
   using PerformanceBase::Mark;
   using PerformanceBase::ClearMarks;

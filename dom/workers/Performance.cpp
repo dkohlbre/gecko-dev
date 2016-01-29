@@ -8,11 +8,12 @@
 #include "mozilla/dom/PerformanceBinding.h"
 
 #include "WorkerPrivate.h"
-
+const double Performance::kDefaultGrain = 0.005;
 BEGIN_WORKERS_NAMESPACE
 
 Performance::Performance(WorkerPrivate* aWorkerPrivate)
-  : mWorkerPrivate(aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate),
+    mGrain(kDefaultGrain)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
@@ -33,7 +34,15 @@ Performance::Now() const
 {
   TimeDuration duration =
     TimeStamp::Now() - mWorkerPrivate->CreationTimeStamp();
-  return RoundTime(duration.ToMilliseconds());
+  return duration.ToMilliseconds();
+}
+
+double
+Performance::Nowish() const
+{
+  TimeDuration duration = TimeStamp::Now() - mWorkerPrivate->CreationTimeStamp();
+  double nowTime = duration.ToMilliseconds();
+  return floor(nowTime / mGrain) * mGrain;
 }
 
 // To be removed once bug 1124165 lands

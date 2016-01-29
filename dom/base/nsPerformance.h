@@ -423,6 +423,16 @@ public:
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // Performance WebIDL methods
+  DOMHighResTimeStamp Nowish();
+  double Grain(){
+    return mGrain;
+  }
+  void SetGrain(double grain)
+  {
+    if (grain > 0) {
+      mGrain =grain;
+    }
+  }
   DOMHighResTimeStamp Now() const override;
 
   nsPerformanceTiming* Timing();
@@ -472,6 +482,8 @@ protected:
   RefPtr<nsPerformanceTiming> mTiming;
   RefPtr<nsPerformanceNavigation> mNavigation;
   RefPtr<nsPerformance> mParentPerformance;
+  double mGrain;
+  static const double kDefaultGrain;
   JS::Heap<JSObject*> mMozMemory;
 };
 

@@ -17,6 +17,10 @@ typedef sequence <PerformanceEntry> PerformanceEntryList;
 interface Performance {
   [DependsOn=DeviceState, Affects=Nothing]
   DOMHighResTimeStamp now();
+  [DependsOn=DeviceState, Affects=Nothing]
+  DOMHighResTimeStamp nowish(); 
+  [LenientFloat]                                                                                                                                                                                                                                                                                                            
+  attribute double grain; // (ms; default 0.005)
 
   [Throws]
   DOMHighResTimeStamp translateTime(DOMHighResTimeStamp time, (Window or Worker or SharedWorker or ServiceWorker) timeSource);

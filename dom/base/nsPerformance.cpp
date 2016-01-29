@@ -52,6 +52,9 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPerformanceTiming, mPerformance)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsPerformanceTiming, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsPerformanceTiming, Release)
 
+
+const double nsPerformance::kDefaultGrain = 0.005;
+
 nsPerformanceTiming::nsPerformanceTiming(nsPerformance* aPerformance,
                                          nsITimedChannel* aChannel,
                                          nsIHttpChannel* aHttpChannel,
@@ -438,7 +441,8 @@ nsPerformance::nsPerformance(nsPIDOMWindow* aWindow,
   : PerformanceBase(aWindow),
     mDOMTiming(aDOMTiming),
     mChannel(aChannel),
-    mParentPerformance(aParentPerformance)
+  mParentPerformance(aParentPerformance),
+  mGrain(kDefaultGrain)
 {
   MOZ_ASSERT(aWindow, "Parent window object should be provided");
 }
@@ -503,7 +507,14 @@ nsPerformance::Navigation()
 DOMHighResTimeStamp
 nsPerformance::Now() const
 {
-  return RoundTime(GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now()));
+  return GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
+}
+
+DOMHighResTimeStamp                                                                                                                                                                                                                                                                                                         
+nsPerformance::Nowish()                                                                                                                                                                                                                                                                                                     
+{                                                                                                                                                                                                                                                                                                                           
+  double nowTime = GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
+  return floor(nowTime / mGrain) * mGrain;                                                                                                                                                                                                                                                            
 }
 
 JSObject*
