@@ -14,8 +14,8 @@ namespace mozilla{
       }
     }
   } 
- DelayChannelQueue::DelayChannelQueue():
-    queueLock("DelayChannelQueue"){
+  DelayChannelQueue::DelayChannelQueue(){
+    MOZ_ASSERT(NS_IsMainThread(), "dcq firing from wrong thread");
     //    LOG(("[FuzzyFox][DCQ]Creating DelayChannelQueue\n"));
     this->listening = false;
     this->delayqueuelen = 0;
@@ -36,7 +36,8 @@ namespace mozilla{
   }
 
   int DelayChannelQueue::FireQueue(){
-    MutexAutoLock lock(this->queueLock);
+    MOZ_ASSERT(NS_IsMainThread(), "dcq firing from wrong thread");
+
     if(this->delayqueuelen == 0){
       return 0;
     }
@@ -52,7 +53,6 @@ namespace mozilla{
 	currentpage = currentpage->next;
       }
 
-      currentpage->page[i%DelayChannelQueue::PageLen]->delayready = true;
       ((nsHttpChannel*)currentpage->page[i%DelayChannelQueue::PageLen])->AsyncOpenFinal(ts);
 
       //TODO: This should really be NS_RELEASE, but that isn't working when i use it this way
@@ -67,8 +67,6 @@ namespace mozilla{
 
 
   int DelayChannelQueue::QueueChannel(DelayChannel* channel){
-    MutexAutoLock lock(this->queueLock);
-
 
     ((HttpBaseChannel*)channel)->AddRef();
     int pageidx=0;
