@@ -3,7 +3,8 @@
 
 namespace mozilla{
 
-#define LOG printf
+
+  static DelayChannelQueue* delayChannelQueue; 
 
   DelayChannelQueue::~DelayChannelQueue(){
     //    LOG(("[FuzzyFox][DCQ]DelayChannelQueue Destroyed!\n"));
@@ -30,8 +31,6 @@ namespace mozilla{
     else{
       //      LOG(("[FuzzyFox][DCQ]: FATAL DCQ couldn't observe\n"));
     }
-
-    memset(&(this->firstPage),'\0',sizeof(DelayChannelQueuePage));
 
   }
 
@@ -87,7 +86,6 @@ namespace mozilla{
     // Check if we are making a new page
     if(pageidx > 0){
       newestpage->next = new DelayChannelQueuePage();
-      memset(&(newestpage),'\0',sizeof(DelayChannelQueuePage));      
       newestpage=newestpage->next;
       newestpage->next = NULL;
       //LOG(("[FuzzyFox][DCQ]: Had to make a new DCQ page!\n"));
@@ -107,5 +105,13 @@ namespace mozilla{
     }
     return NS_OK;
   }
- 
+
+  int DelayChannelQueue::AttemptQueueChannel(DelayChannel* channel){
+    if(delayChannelQueue == NULL){
+      delayChannelQueue = new DelayChannelQueue();
+      delayChannelQueue->AddRef();
+    }
+    return delayChannelQueue->QueueChannel(channel);
+  }
+
 }

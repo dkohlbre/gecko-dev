@@ -26,6 +26,7 @@
 #include "nsIStreamListener.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICorsPreflightCallback.h"
+#include "DelayChannel.h"
 
 class nsDNSPrefetch;
 class nsICancelable;

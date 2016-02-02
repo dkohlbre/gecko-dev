@@ -5053,7 +5053,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     // PauseTask/DelayChannel queuing
     
-    AttemptQueueChannel(this);
+    DelayChannelQueue::AttemptQueueChannel(this);
 
     return NS_OK;
 }

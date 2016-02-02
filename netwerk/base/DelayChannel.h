@@ -9,6 +9,7 @@ namespace mozilla{
   public:
     DelayChannel() {};
     //NS_IMETHOD AsyncOpenFinal();
+
   };
 
   class DelayChannelQueue : public nsIObserver{
@@ -32,6 +33,8 @@ namespace mozilla{
     int FireQueue();
     int QueueChannel(DelayChannel* channel);
 
+    static int AttemptQueueChannel(DelayChannel* channel);
+
 
     //TODO fix this
     NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) override {return NS_ERROR_NO_INTERFACE;}
@@ -45,17 +48,9 @@ namespace mozilla{
 	return 1;
       }
 
+
   };
-  static DelayChannelQueue* delayChannelQueue;
 
-
-  static int AttemptQueueChannel(DelayChannel* channel){
-    if(delayChannelQueue == NULL){
-      delayChannelQueue = new DelayChannelQueue();
-      delayChannelQueue->AddRef();
-    }
-    return delayChannelQueue->QueueChannel(channel);
-  }
 
 }
 #endif /* _DelayChannel_h */
