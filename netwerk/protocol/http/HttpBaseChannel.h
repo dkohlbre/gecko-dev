@@ -35,7 +35,6 @@
 #include "nsILoadContext.h"
 #include "nsILoadInfo.h"
 #include "mozilla/net/NeckoCommon.h"
-#include "DelayChannel.h"
 #include "nsThreadUtils.h"
 #include "PrivateBrowsingChannel.h"
 #include "mozilla/net/DNS.h"
@@ -44,6 +43,7 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsCOMArray.h"
 #include "mozilla/net/ChannelEventQueue.h"
+#include "DelayChannel.h"
 
 class nsPerformance;
 class nsISecurityConsoleMessage;
@@ -64,7 +64,6 @@ extern mozilla::LazyLogModule gHttpLog;
  *   the way to the HTTP channel.
  */
 class HttpBaseChannel : public nsHashPropertyBag
-                      , public DelayChannel
                       , public nsIEncodedChannel
                       , public nsIHttpChannel
                       , public nsIHttpChannelInternal
@@ -78,6 +77,8 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsITimedChannel
                       , public nsIForcePendingChannel
                       , public nsIConsoleReportCollector
+                      , public DelayChannel
+
 {
 protected:
   virtual ~HttpBaseChannel();
