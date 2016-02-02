@@ -14,8 +14,7 @@ namespace mozilla{
       }
     }
   } 
- DelayChannelQueue::DelayChannelQueue():
-    queueLock("DelayChannelQueue"){
+  DelayChannelQueue::DelayChannelQueue(){
     //    LOG(("[FuzzyFox][DCQ]Creating DelayChannelQueue\n"));
     this->listening = false;
     this->delayqueuelen = 0;
@@ -36,14 +35,16 @@ namespace mozilla{
   }
 
   int DelayChannelQueue::FireQueue(){
-    MutexAutoLock lock(this->queueLock);
+
+    MOZ_ASSERT(NS_IsMainThread(), "dcq firing from wrong thread");
     if(this->delayqueuelen == 0){
       return 0;
     }
-    //LOG(("[FuzzyFox][DCQ]: FIRING QUEUE of %i DelayChannels for DCQ %p",delayChannelQueue.this->delayqueuelen,this));
+    //LOG("[FuzzyFox][DCQ]: FIRING QUEUE of %i DelayChannels for DCQ %p\n",this->delayqueuelen,this);
 
     //TODO: get this from the DOM clock?
     TimeStamp ts = TimeStamp::Now();
+
 
     DelayChannelQueuePage* currentpage = &firstPage;
 
@@ -52,8 +53,9 @@ namespace mozilla{
 	currentpage = currentpage->next;
       }
 
-      currentpage->page[i%DelayChannelQueue::PageLen]->delayready = true;
+      //      LOG("[FuzzyFox][DCQ]: FIRING Element %p for DCQ %p\n",currentpage->page[i%DelayChannelQueue::PageLen],this);
       ((nsHttpChannel*)currentpage->page[i%DelayChannelQueue::PageLen])->AsyncOpenFinal(ts);
+      //      LOG("[FuzzyFox][DCQ]: Finished Element %p for DCQ %p\n",currentpage->page[i%DelayChannelQueue::PageLen],this);
 
       //TODO: This should really be NS_RELEASE, but that isn't working when i use it this way
       ((nsHttpChannel*)currentpage->page[i%DelayChannelQueue::PageLen])->Release();
@@ -61,15 +63,15 @@ namespace mozilla{
     }
     int fired = this->delayqueuelen;
     this->delayqueuelen = 0;
-    //LOG(("[FuzzyFox][DCQ]: Firing done for DCQ %p\n",this));
+    //    LOG("[FuzzyFox][DCQ]: Firing done for DCQ %p\n",this);
     return fired;
   }
 
 
   int DelayChannelQueue::QueueChannel(DelayChannel* channel){
-    MutexAutoLock lock(this->queueLock);
 
-
+    MOZ_ASSERT(NS_IsMainThread(), "dcq from wrong thread");
+    //LOG("[FuzzyFox][DCQ]: Queuing Channel %p for DCQ %p\n",channel,this);
     ((HttpBaseChannel*)channel)->AddRef();
     int pageidx=0;
     int idx=this->delayqueuelen;
@@ -96,7 +98,7 @@ namespace mozilla{
     }
     newestpage->page[idx] = channel;
     this->delayqueuelen++;
-    //LOG(("[FuzzyFox][DCQ]: Queued, new length %i for DCQ %p\n",this->delayqueuelen,this));
+    //LOG("[FuzzyFox][DCQ]: Queued, new length %i for DCQ %p\n",this->delayqueuelen,this);
     return this->delayqueuelen;
   }
 
