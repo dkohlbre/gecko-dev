@@ -18,9 +18,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "mozilla/LockedTime.h"
-#include "mozilla/LockedTimeObserver.h"
-
 #if defined(__DragonFly__) || defined(__FreeBSD__) \
     || defined(__NetBSD__) || defined(__OpenBSD__)
 #include <sys/param.h>

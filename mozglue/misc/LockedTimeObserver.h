@@ -65,7 +65,7 @@ class FuzzyfoxClockObserver : public nsIObserver{
   }
   
   nsresult Observe(nsISupports* aSubject, const char* aTopic,
-		   const char16_t* aData){
+		   const char16_t* aData) override{
     if (!strcmp(aTopic, "fuzzyfox-update-clocks")) {
       lockedClock->updateLockedClockUS(*(int64_t*)aData);
     }

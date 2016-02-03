@@ -50,8 +50,8 @@ void pauseTask::initState(nsThreadPool* const aParent){
 
   //Calculate boot timestamp
   timespec tv1,tv2;
-  int rv = clock_gettime(CLOCK_MONOTONIC, &tv1);
-  rv = clock_gettime(CLOCK_REALTIME, &tv2);
+  clock_gettime(CLOCK_MONOTONIC, &tv1);
+  clock_gettime(CLOCK_REALTIME, &tv2);
   int64_t v1 = tv1.tv_nsec + (1000000000*tv1.tv_sec);
   int64_t v2 = tv2.tv_nsec + (1000000000*tv2.tv_sec);
   int64_t boot_delta = v2-v1;
