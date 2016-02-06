@@ -50,6 +50,7 @@ nsThreadPool::nsThreadPool()
   , mIdleCount(0)
   , mStackSize(nsIThreadManager::DEFAULT_STACK_SIZE)
   , mShutdown(false)
+  , mStopPause(true)
 {
   LOG(("THRD-P(%p) constructor!!!\n", this));
   donewpause = false;
@@ -141,6 +142,8 @@ nsThreadPool::ShutdownThread(nsIThread* aThread)
   // done from some other thread, so we use the main thread of the application.
 
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
+
+  mStopPause = true;
 
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(aThread, &nsIThread::Shutdown);
   NS_DispatchToMainThread(r);
@@ -302,6 +305,8 @@ nsThreadPool::IsOnCurrentThread(bool* aResult)
 NS_IMETHODIMP
 nsThreadPool::Shutdown()
 {
+  mStopPause =true;
+
   nsCOMArray<nsIThread> threads;
   nsCOMPtr<nsIThreadPoolListener> listener;
   {

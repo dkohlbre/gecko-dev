@@ -36,6 +36,8 @@ public:
 
   nsThreadPool();
 
+  bool mStopPause;
+
 private:
   ~nsThreadPool();
 

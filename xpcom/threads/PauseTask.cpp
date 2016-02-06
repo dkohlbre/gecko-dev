@@ -46,6 +46,11 @@ pauseTask::Run()
   uint64_t endTime_us = actualTime_us();
   LOG(("[FuzzyFox][PauseTaskEvent] Duration of %" PRIu64 " \n", endTime_us-this->mStartTime_us));
 
+  if(mParent->mStopPause){
+    LOG(("[FuzzyFox][SHUTDOWN] yep\n"));
+    return NS_OK;
+  }
+
   // Queue next event
   while(NS_FAILED(NS_DispatchToMainThread(
 					  new pauseTask(0,
