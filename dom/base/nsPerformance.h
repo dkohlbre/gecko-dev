@@ -317,6 +317,7 @@ public:
   void ClearResourceTimings();
 
   virtual DOMHighResTimeStamp Now() const = 0;
+  virtual DOMHighResTimeStamp Nowreally() const = 0;
 
   DOMHighResTimeStamp
   TranslateTime(DOMHighResTimeStamp aTime,
@@ -424,6 +425,7 @@ public:
 
   // Performance WebIDL methods
   DOMHighResTimeStamp Now() const override;
+  DOMHighResTimeStamp Nowreally() const override;
 
   nsPerformanceTiming* Timing();
   nsPerformanceNavigation* Navigation();

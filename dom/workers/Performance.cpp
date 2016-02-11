@@ -38,6 +38,15 @@ Performance::Now() const
   return RoundTime(duration.ToMilliseconds());
 }
 
+DOMHighResTimeStamp
+Performance::Nowreally() const
+{
+  TimeDuration duration =
+    TimeStamp::Nowreally() - mWorkerPrivate->CreationTimeStamp();
+  return RoundTime(duration.ToMilliseconds());
+}
+
+
 // To be removed once bug 1124165 lands
 bool
 Performance::IsPerformanceTimingAttribute(const nsAString& aName)

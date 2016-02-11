@@ -448,6 +448,7 @@ public:
    * Use it for measurements of longer times, like >200ms timeouts.
    */
   static TimeStamp Now() { return Now(true); }
+  static TimeStamp Nowreally() { return Nowreally(true); }
   static TimeStamp NowLoRes() { return Now(false); }
 
   static MFBT_API TimeStamp Now_fuzzy(TimeStampValue aValue);
@@ -589,6 +590,7 @@ private:
   MOZ_IMPLICIT TimeStamp(TimeStampValue aValue,bool aUsedCanonicalNow) : usedCanonicalNow(aUsedCanonicalNow),mValue(aValue) {}
 
   static MFBT_API TimeStamp Now(bool aHighResolution);
+  static MFBT_API TimeStamp Nowreally(bool aHighResolution);
 
   /**
    * Computes the uptime of the current process in microseconds. The result

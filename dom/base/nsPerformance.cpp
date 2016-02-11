@@ -506,6 +506,13 @@ nsPerformance::Now() const
   return RoundTime(GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now()));
 }
 
+DOMHighResTimeStamp
+nsPerformance::Nowreally() const
+{
+  return RoundTime(GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Nowreally()));
+}
+
+
 JSObject*
 nsPerformance::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {

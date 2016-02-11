@@ -14,11 +14,12 @@ static LazyLogModule sPauseTaskLog("PauseTask");
 #undef LOG
 #endif
 #define LOG(args) MOZ_LOG(sPauseTaskLog, mozilla::LogLevel::Debug, args)
-
-#define PT_DURATION_CENTER  150
-#define PT_STATIC_CLOCK_GRAIN PT_DURATION_CENTER
 #define US_TO_NS(x) (x*1000)
 #define NS_TO_US(x) (x/1000)
+#define MS_TO_US(x) (x*1000)
+
+#define PT_DURATION_CENTER MS_TO_US(50)
+#define PT_STATIC_CLOCK_GRAIN MS_TO_US(100)
 
 
 // This is for creating a next-scheduled pausetask

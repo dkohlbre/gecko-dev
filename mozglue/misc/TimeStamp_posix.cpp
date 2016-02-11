@@ -213,6 +213,12 @@ TimeStamp::Now(bool aHighResolution)
   return TimeStamp::Now_fuzzy(ClockTimeNs());
 }
 
+TimeStamp
+TimeStamp::Nowreally(bool aHighResolution)
+{
+  return TimeStamp(ClockTimeNs());
+}
+
 #if defined(XP_LINUX) || defined(ANDROID)
 
 // Calculates the amount of jiffies that have elapsed since boot and up to the
