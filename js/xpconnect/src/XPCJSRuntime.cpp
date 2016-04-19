@@ -3359,7 +3359,7 @@ XPCJSRuntime::XPCJSRuntime()
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
    mSlowScriptSecondHalf(false)
 {
-<<<<<<< HEAD
+
 }
 
 #ifdef XP_WIN

@@ -362,7 +362,7 @@ public:
   UpdateJSWorkerMemoryParameter(JSGCParamKey key, uint32_t value);
 
   void
-  UpdateFuzzyClockUS(JSContext* aCx, int64_t value);
+  UpdateFuzzyClockUS(int64_t value);
 
 #ifdef JS_GC_ZEAL
   void

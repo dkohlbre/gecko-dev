@@ -3029,9 +3029,13 @@ WorkerPrivateParent<Derived>::UpdateRuntimeOptions(
   }
 }
 
-WorkerPrivateParent<Derived>::UpdateFuzzyClockUS(JSContext* aCx, int64_t value){
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::UpdateFuzzyClockUS(int64_t value){
   AssertIsOnParentThread();
-  JS_UpdateLockedClockUS(aCx,value);
+  JSContext* cx;
+  JSAutoRequest ar(cx);
+  JS_UpdateLockedClockUS(cx,value);
 }
 
 template <class Derived>
