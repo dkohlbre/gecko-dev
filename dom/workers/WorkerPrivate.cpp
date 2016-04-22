@@ -1596,6 +1596,27 @@ private:
   bool mIsOffline;
 };
 
+class UpdateFuzzyClocksRunnable : public WorkerRunnable
+{
+public:
+  UpdateFuzzyClocksRunnable(WorkerPrivate* aWorkerPrivate, int64_t aTimeUS)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+      mTimeUS(aTimeUS)
+  {
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    JS_UpdateLockedClockUS(aCx,mTimeUS);
+    return true;
+  }
+
+private:
+  int64_t mTimeUS;
+};
+
+
 class MemoryPressureRunnable : public WorkerControlRunnable
 {
 public:
@@ -3033,9 +3054,14 @@ template <class Derived>
 void
 WorkerPrivateParent<Derived>::UpdateFuzzyClockUS(int64_t value){
   AssertIsOnParentThread();
-  JSContext* cx;
-  JSAutoRequest ar(cx);
-  JS_UpdateLockedClockUS(cx,value);
+
+  RefPtr<UpdateFuzzyClocksRunnable> runnable =
+    new UpdateFuzzyClocksRunnable(ParentAsWorkerPrivate(), value);
+  if (!runnable->Dispatch()) {
+    NS_WARNING("Failed to dispatch fuzzy clocks update event!");
+  }
+
+
 }
 
 template <class Derived>

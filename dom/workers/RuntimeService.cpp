@@ -2559,8 +2559,7 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
   if (!strcmp(aTopic, FUZZYFOX_UPDATECLOCK_OBSERVER_TOPIC)) {
-    // TODO: fix this up, had to remove for now dkohlbre
-    //    BROADCAST_ALL_WORKERS(UpdateFuzzyClockUS, *(int64_t*)aData);
+    BROADCAST_ALL_WORKERS(UpdateFuzzyClockUS, *(int64_t*)aData);
     return NS_OK;
   }
 
