@@ -209,6 +209,11 @@ TimeStamp::Now(bool aHighResolution)
 {
   return TimeStamp::Now_fuzzy(ClockTimeNs());
 }
+TimeStamp
+TimeStamp::NowReally(bool aHighResolution)
+{
+  return TimeStamp(ClockTimeNs());
+}
 
 #if defined(XP_LINUX) || defined(ANDROID)
 

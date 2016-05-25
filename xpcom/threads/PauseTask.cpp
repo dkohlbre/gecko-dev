@@ -18,10 +18,10 @@ static LazyLogModule sPauseTaskLog("PauseTask");
 #endif
 #define LOG(args) MOZ_LOG(sPauseTaskLog, mozilla::LogLevel::Debug, args)
 
-#define PT_DURATION_CENTER  150
-#define PT_STATIC_CLOCK_GRAIN PT_DURATION_CENTER
 #define US_TO_NS(x) (x*1000)
 #define NS_TO_US(x) (x/1000)
+#define PT_DURATION_CENTER_US 100000
+#define PT_STATIC_CLOCK_GRAIN_US PT_DURATION_CENTER_US
 
 
 // This is for creating a next-scheduled pausetask
@@ -159,11 +159,11 @@ uint64_t pauseTask::pickDuration_us(){
   
   // We want uniform distribution from 1->PT_DURATION_CENTER*2
   // so that the mean is PT_DURATION_CENTER
-  return 1+(rval%(PT_DURATION_CENTER*2));
+  return 1+(rval%(PT_DURATION_CENTER_US*2));
 }
 
 int64_t pauseTask::getClockGrain_us(){
   // Static for now
   // Should be reading from some config probably
-  return PT_STATIC_CLOCK_GRAIN;
+  return PT_STATIC_CLOCK_GRAIN_US;
 }

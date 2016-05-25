@@ -447,7 +447,9 @@ public:
    * lower precision, usually 15.6 ms, but with very good performance benefit.
    * Use it for measurements of longer times, like >200ms timeouts.
    */
+
   static TimeStamp Now() { return Now(true); }
+  static TimeStamp NowReally() { return NowReally(true); }
   static TimeStamp NowLoRes() { return Now(false); }
 
   static MFBT_API TimeStamp Now_fuzzy(TimeStampValue aValue);
@@ -589,6 +591,7 @@ private:
   MOZ_IMPLICIT TimeStamp(TimeStampValue aValue,bool aUsedCanonicalNow) : usedCanonicalNow(aUsedCanonicalNow),mValue(aValue) {}
 
   static MFBT_API TimeStamp Now(bool aHighResolution);
+  static MFBT_API TimeStamp NowReally(bool aHighResolution);
 
   /**
    * Computes the uptime of the current process in microseconds. The result

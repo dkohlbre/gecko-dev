@@ -510,7 +510,7 @@ nsPerformance::Navigation()
 DOMHighResTimeStamp
 nsPerformance::Now() const
 {
-  return RoundTime(GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now()));
+  return RoundTime(GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::NowReally()));
 }
 
 JSObject*
