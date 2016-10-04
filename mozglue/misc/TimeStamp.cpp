@@ -9,8 +9,9 @@
  */
 
 #include "mozilla/TimeStamp.h"
-#include <stdio.h>
 #include <string.h>
+#include "nss.h"
+#include "pk11pub.h"
 
 namespace mozilla {
 
@@ -44,6 +45,7 @@ struct TimeStampInitialization
   };
 };
 
+  
 static TimeStampInitialization sInitOnce;
 
 MFBT_API TimeStamp
@@ -83,6 +85,69 @@ TimeStamp::ProcessCreation(bool& aIsInconsistent)
   return sInitOnce.mProcessCreation;
 }
 
+  /** Start Fuzzy Time stuff **/
+static bool needsFuzzyInit = true; 
+static uint64_t nextUpdate_ns,canonicalTime_ns;
+static struct drand48_data mRandState;
+  
+  //TODO: Can we make this configurable?
+static uint64_t timeGranularity_ns = 100000;
+  
+bool
+TimeStamp::realNeedsInit(){
+  return needsFuzzyInit;
+}
+
+static uint64_t roundTime(uint64_t time_ns){
+  return floor(time_ns/timeGranularity_ns)*timeGranularity_ns;
+}
+
+void
+TimeStamp::realInitFuzzyTime(unsigned char* randomData,unsigned int granularity_ns){
+  needsFuzzyInit = false;
+  timeGranularity_ns = granularity_ns;
+  // Take our random data and turn it into a long int seed
+  // TODO: check this is working correctly
+  long int seedv;
+  seedv = *((long int*)randomData);
+  srand48_r(seedv,&mRandState);
+}
+
+static uint64_t pickDuration_ns(){
+//   // Get the next stateful random value
+//   // uniform random number from 0->2**31
+   long int rval;
+   lrand48_r(&mRandState,&rval);
+
+//   // We want uniform distribution from 1->FT_DURATION_CENTER*2
+//   // so that the mean is FT_DURATION_CENTER
+   return 1+(rval%(timeGranularity_ns*2));
+}
+
+
+MFBT_API TimeStamp
+TimeStamp::Now_fuzzy(uint64_t currentTime_ns){
+  if(needsFuzzyInit){
+    //    printf("[TIMESTAMP] Returning UNFUZZY\n");
+    return TimeStamp(currentTime_ns);
+
+  }
+  //  printf("[TIMESTAMP] Grain %i\n",timeGranularity_ns);
+  // Are we overdue to (maybe) update the time?
+  if(nextUpdate_ns < currentTime_ns){
+    
+    // Next update check occurs at a random time in the future
+    nextUpdate_ns = currentTime_ns+pickDuration_ns();
+
+    // This may NOT result in a change to canonicalTime
+    canonicalTime_ns = roundTime(currentTime_ns);
+  }
+
+  return TimeStamp(canonicalTime_ns);
+}
+
+  /** Stop Fuzzy Time stuff **/
+  
 void
 TimeStamp::RecordProcessRestart()
 {

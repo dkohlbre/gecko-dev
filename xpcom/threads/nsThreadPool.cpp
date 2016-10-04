@@ -13,6 +13,8 @@
 #include "prinrval.h"
 #include "mozilla/Logging.h"
 #include "nsThreadSyncDispatch.h"
+#include "mozilla/TimeStamp.h"
+#include "pk11pub.h"
 
 using namespace mozilla;
 
@@ -52,6 +54,19 @@ nsThreadPool::nsThreadPool()
   , mShutdown(false)
 {
   LOG(("THRD-P(%p) constructor!!!\n", this));
+  // Initialize TimeStamp fuzzing 
+
+
+  //  if(TimeStamp::needsInit()){
+    // We are going to use this random value to go to srand48_r, so we need a long int
+    unsigned char randomData[8];
+    SECStatus rv = PK11_GenerateRandom(randomData,8);
+    // TODO if rv is a failure, we probably just log it and continue?
+    // Get the granularity preference
+    unsigned int granularity_ns = Preferences::GetUint("security.fuzzytime.granularity_ns", 5000);
+    TimeStamp::initFuzzyTime(randomData,granularity_ns);
+    //  }
+
 }
 
 nsThreadPool::~nsThreadPool()

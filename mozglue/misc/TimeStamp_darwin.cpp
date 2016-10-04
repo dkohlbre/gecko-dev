@@ -159,7 +159,8 @@ TimeStamp::Shutdown()
 TimeStamp
 TimeStamp::Now(bool aHighResolution)
 {
-  return TimeStamp(ClockTime());
+  return Now_fuzzy(ClockTime());
+  //  return TimeStamp(ClockTime());
 }
 
 // Computes and returns the process uptime in microseconds.

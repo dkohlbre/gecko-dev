@@ -535,7 +535,8 @@ TimeStamp::Now(bool aHighResolution)
   // Both values are in [mt] units.
   ULONGLONG QPC = useQPC ? PerformanceCounter() : uint64_t(0);
   ULONGLONG GTC = ms2mt(sGetTickCount64());
-  return TimeStamp(TimeStampValue(GTC, QPC, useQPC));
+  return Now_fuzzy(TimeStampValue(GTC, QPC, useQPC));
+  //  return TimeStamp(TimeStampValue(GTC, QPC, useQPC));
 }
 
 // Computes and returns the process uptime in microseconds.

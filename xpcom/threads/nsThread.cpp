@@ -630,6 +630,7 @@ nsThread::~nsThread()
 nsresult
 nsThread::Init()
 {
+
   // spawn thread and wait until it is fully setup
   RefPtr<nsThreadStartupEvent> startup = new nsThreadStartupEvent();
 

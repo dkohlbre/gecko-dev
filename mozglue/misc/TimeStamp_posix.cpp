@@ -17,6 +17,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 #if defined(__DragonFly__) || defined(__FreeBSD__) \
     || defined(__NetBSD__) || defined(__OpenBSD__)
@@ -203,7 +205,8 @@ TimeStamp::Shutdown()
 TimeStamp
 TimeStamp::Now(bool aHighResolution)
 {
-  return TimeStamp(ClockTimeNs());
+  return Now_fuzzy(ClockTimeNs());
+  //  return TimeStamp(ClockTimeNs());
 }
 
 #if defined(XP_LINUX) || defined(ANDROID)

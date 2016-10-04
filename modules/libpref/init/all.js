@@ -2141,6 +2141,9 @@ pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU
 pref("font.whitelist.skip_default_features_space_check", "Fira Sans,Fira Mono");
 #endif
 
+// FuzzyTime configuration options for security purposes
+pref("security.fuzzytime.granularity_ns",5000);
+
 pref("images.dither", "auto");
 pref("security.directory",              "");
 
