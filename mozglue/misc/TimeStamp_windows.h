@@ -52,6 +52,8 @@ public:
   MFBT_API TimeStampValue& operator+=(const int64_t aOther);
   MFBT_API TimeStampValue& operator-=(const int64_t aOther);
 
+  MFBT_API TimeStampValue& roundWithNs(uint64_t resolution_ns);
+  
   bool operator<(const TimeStampValue& aOther) const
   {
     return int64_t(*this - aOther) < 0;

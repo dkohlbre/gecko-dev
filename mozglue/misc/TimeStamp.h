@@ -445,7 +445,7 @@ public:
    */
   static TimeStamp Now() { return Now(true); }
   static TimeStamp NowLoRes() { return Now(false); }
-  static MFBT_API TimeStamp Now_fuzzy(uint64_t currentTime_ns);
+  static MFBT_API TimeStamp Now_fuzzy(TimeStamp currentTime);
 
   /**
    * FuzzyTime components
@@ -584,6 +584,7 @@ private:
   MOZ_IMPLICIT TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
 
   static MFBT_API TimeStamp Now(bool aHighResolution);
+  static MFBT_API TimeStamp roundTime(TimeStamp time);
   static MFBT_API bool realNeedsInit();
   static MFBT_API void realInitFuzzyTime(unsigned char* randomData,unsigned int granularity_ns);
 

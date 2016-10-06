@@ -205,7 +205,7 @@ TimeStamp::Shutdown()
 TimeStamp
 TimeStamp::Now(bool aHighResolution)
 {
-  return Now_fuzzy(ClockTimeNs());
+  return Now_fuzzy(TimeStamp(ClockTimeNs()));
   //  return TimeStamp(ClockTimeNs());
 }
 

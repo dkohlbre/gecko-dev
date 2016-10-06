@@ -10,8 +10,6 @@
 
 #include "mozilla/TimeStamp.h"
 #include <string.h>
-#include "nss.h"
-#include "pk11pub.h"
 
 namespace mozilla {
 
@@ -87,21 +85,47 @@ TimeStamp::ProcessCreation(bool& aIsInconsistent)
 
   /** Start Fuzzy Time stuff **/
 static bool needsFuzzyInit = true; 
-static uint64_t nextUpdate_ns,canonicalTime_ns;
-static struct drand48_data mRandState;
+static TimeStamp nextUpdate,canonicalTime;
+
   
-  //TODO: Can we make this configurable?
-static uint64_t timeGranularity_ns = 100000;
+  
+  // Configured via about::config prefs, set in init
+  static uint64_t timeGranularity_ns = 5000; // Defaults to 5us
   
 bool
 TimeStamp::realNeedsInit(){
   return needsFuzzyInit;
 }
 
-static uint64_t roundTime(uint64_t time_ns){
-  return floor(time_ns/timeGranularity_ns)*timeGranularity_ns;
+#ifdef XP_WIN
+  TimeStamp TimeStamp::roundTime(TimeStamp time){
+    return TimeStamp(time.mValue.roundWithNs(timeGranularity_ns));
+}
+#endif
+ 
+#ifndef XP_WIN
+  TimeStamp TimeStamp::roundTime(TimeStamp time_ns){
+  return TimeStamp(floor(time_ns.mValue/timeGranularity_ns)*timeGranularity_ns);
+}
+#endif
+
+  // Windows or OSX init and duration picking, currently broken!
+#if defined(XP_WIN) || defined(XP_MACOSX)
+void
+TimeStamp::realInitFuzzyTime(unsigned char* randomData,unsigned int granularity_ns){
+  needsFuzzyInit = false;
+  timeGranularity_ns = granularity_ns;
+  //TODO not doing much with the random data yet
 }
 
+static TimeDuration pickDuration(){
+  return TimeDuration::FromMicroseconds(timeGranularity_ns/1000.0);
+}
+#endif
+
+  // Linux
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+  static struct drand48_data mRandState;
 void
 TimeStamp::realInitFuzzyTime(unsigned char* randomData,unsigned int granularity_ns){
   needsFuzzyInit = false;
@@ -113,7 +137,7 @@ TimeStamp::realInitFuzzyTime(unsigned char* randomData,unsigned int granularity_
   srand48_r(seedv,&mRandState);
 }
 
-static uint64_t pickDuration_ns(){
+static TimeDuration pickDuration(){
 //   // Get the next stateful random value
 //   // uniform random number from 0->2**31
    long int rval;
@@ -121,29 +145,32 @@ static uint64_t pickDuration_ns(){
 
 //   // We want uniform distribution from 1->FT_DURATION_CENTER*2
 //   // so that the mean is FT_DURATION_CENTER
-   return 1+(rval%(timeGranularity_ns*2));
+   return TimeDuration::FromMicroseconds(1+(rval%(timeGranularity_ns*2))/1000.0);
 }
+#endif
 
 
+
+  
 MFBT_API TimeStamp
-TimeStamp::Now_fuzzy(uint64_t currentTime_ns){
+TimeStamp::Now_fuzzy(TimeStamp currentTime){
   if(needsFuzzyInit){
     //    printf("[TIMESTAMP] Returning UNFUZZY\n");
-    return TimeStamp(currentTime_ns);
+    return TimeStamp(currentTime);
 
   }
   //  printf("[TIMESTAMP] Grain %i\n",timeGranularity_ns);
   // Are we overdue to (maybe) update the time?
-  if(nextUpdate_ns < currentTime_ns){
+  if(nextUpdate < currentTime){
     
     // Next update check occurs at a random time in the future
-    nextUpdate_ns = currentTime_ns+pickDuration_ns();
+    nextUpdate = currentTime+pickDuration();
 
     // This may NOT result in a change to canonicalTime
-    canonicalTime_ns = roundTime(currentTime_ns);
+    canonicalTime = roundTime(currentTime);
   }
 
-  return TimeStamp(canonicalTime_ns);
+  return TimeStamp(canonicalTime);
 }
 
   /** Stop Fuzzy Time stuff **/

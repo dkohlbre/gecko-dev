@@ -386,6 +386,27 @@ TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
   return deltaGTC;
 }
 
+MFBT_API TimeStampValue&
+TimeStampValue::roundWithNs(uint64_t resolution_ns){
+  if(!sUseQPC){
+    double count_ns = mt2ms_f(mGTC)*100000; // Convert to ns
+  }
+  else{
+    double count_ns = mt2ms_f(mQPC)*100000; // Convert to ns
+  }
+  double roundedCount_mt = ((floor(count_ns/resolution_ns)*resolution_ns) // Round
+                            *sFrequencyPerSec)/100000; // Convert back to mt
+  if(!sUseQPC){
+    mGTC = roundedCount_mt;
+  }
+  else{
+    mQPC = roundedCount_mt;
+  }
+  
+  return *this;
+
+}
+  
 MFBT_API uint64_t
 TimeStampValue::operator-(const TimeStampValue& aOther) const
 {
@@ -535,7 +556,7 @@ TimeStamp::Now(bool aHighResolution)
   // Both values are in [mt] units.
   ULONGLONG QPC = useQPC ? PerformanceCounter() : uint64_t(0);
   ULONGLONG GTC = ms2mt(sGetTickCount64());
-  return Now_fuzzy(TimeStampValue(GTC, QPC, useQPC));
+  return Now_fuzzy(TimeStamp(TimeStampValue(GTC, QPC, useQPC)));
   //  return TimeStamp(TimeStampValue(GTC, QPC, useQPC));
 }
 
