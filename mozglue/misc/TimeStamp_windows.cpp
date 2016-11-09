@@ -388,11 +388,12 @@ TimeStampValue::CheckQPC(const TimeStampValue& aOther) const
 
 MFBT_API TimeStampValue&
 TimeStampValue::roundWithNs(uint64_t resolution_ns){
+  double count_ns;
   if(!sUseQPC){
-    double count_ns = mt2ms_f(mGTC)*100000; // Convert to ns
+    count_ns = mt2ms_f(mGTC)*100000; // Convert to ns
   }
   else{
-    double count_ns = mt2ms_f(mQPC)*100000; // Convert to ns
+    count_ns = mt2ms_f(mQPC)*100000; // Convert to ns
   }
   double roundedCount_mt = ((floor(count_ns/resolution_ns)*resolution_ns) // Round
                             *sFrequencyPerSec)/100000; // Convert back to mt
