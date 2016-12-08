@@ -58,16 +58,9 @@ nsThreadPool::nsThreadPool()
   LOG(("THRD-P(%p) constructor!!!\n", this));
   // Initialize TimeStamp fuzzing 
 
-  unsigned char randomData[8];
-  SECStatus rv = PK11_GenerateRandom(randomData,8);
-  if (rv != SECSuccess){
-    LOG(("FUZZYTIME - Cannot get a random value for initalization! Fuzzytime is now DISABLED\n"));
-  }
-  else {
-    // Get the granularity preference
-    unsigned int granularity_ns = Preferences::GetUint("security.fuzzytime.granularity_ns", 5000);
-    TimeStamp::initFuzzyTime(randomData,granularity_ns);
-  }
+  // Get the granularity preference
+  unsigned int granularity_ns = Preferences::GetUint("security.fuzzytime.granularity_ns", 5000);
+  TimeStamp::initFuzzyTime(granularity_ns);
 }
 
 nsThreadPool::~nsThreadPool()

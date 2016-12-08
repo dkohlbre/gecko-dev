@@ -110,16 +110,6 @@ TimeStamp::realNeedsInit(){
 }
 #endif
 
-  // Windows or OSX init and duration picking, currently broken!
-#if defined(XP_WIN) || defined(XP_MACOSX)
-void
-TimeStamp::realInitFuzzyTime(unsigned char* randomData,unsigned int granularity_ns){
-  needsFuzzyInit = false;
-  timeGranularity_ns = granularity_ns;
-  //TODO not doing much with the random data yet
-
-}
-
 static TimeDuration pickDuration(){
   unsigned char randomData[8];
   SECStatus rv = PK11_GenerateRandom(randomData,8);
@@ -130,33 +120,12 @@ static TimeDuration pickDuration(){
   }
  return TimeDuration::FromMicroseconds(timeGranularity_ns/1000.0);
 }
-#endif
 
-  // Linux
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-  static struct drand48_data mRandState;
 void
-TimeStamp::realInitFuzzyTime(unsigned char* randomData,unsigned int granularity_ns){
+TimeStamp::realInitFuzzyTime(unsigned int granularity_ns){
   needsFuzzyInit = false;
   timeGranularity_ns = granularity_ns;
-  // Take our random data and turn it into a long int seed
-  // TODO: check this is working correctly
-  long int seedv;
-  seedv = *((long int*)randomData);
-  srand48_r(seedv,&mRandState);
 }
-
-static TimeDuration pickDuration(){
-//   // Get the next stateful random value
-//   // uniform random number from 0->2**31
-   long int rval;
-   lrand48_r(&mRandState,&rval);
-
-//   // We want uniform distribution from 1->FT_DURATION_CENTER*2
-//   // so that the mean is FT_DURATION_CENTER
-   return TimeDuration::FromMicroseconds(1+(rval%(timeGranularity_ns*2))/1000.0);
-}
-#endif
 
 
 

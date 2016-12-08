@@ -451,7 +451,7 @@ public:
    * FuzzyTime components
    */
   static bool needsInit() { return realNeedsInit(); }
-  static void initFuzzyTime(unsigned char* randomData,unsigned int granularity_ns) { realInitFuzzyTime(randomData,granularity_ns); }
+  static void initFuzzyTime(unsigned int granularity_ns) { realInitFuzzyTime(granularity_ns); }
   
   /**
    * Return a timestamp representing the time when the current process was
@@ -586,7 +586,7 @@ private:
   static MFBT_API TimeStamp Now(bool aHighResolution);
   static MFBT_API TimeStamp roundTime(TimeStamp time);
   static MFBT_API bool realNeedsInit();
-  static MFBT_API void realInitFuzzyTime(unsigned char* randomData,unsigned int granularity_ns);
+  static MFBT_API void realInitFuzzyTime(unsigned int granularity_ns);
 
   /**
    * Computes the uptime of the current process in microseconds. The result
