@@ -10,6 +10,7 @@
 
 #include "mozilla/TimeStamp.h"
 #include <string.h>
+#include <pk11pub.h>
 
 namespace mozilla {
 
@@ -116,10 +117,18 @@ TimeStamp::realInitFuzzyTime(unsigned char* randomData,unsigned int granularity_
   needsFuzzyInit = false;
   timeGranularity_ns = granularity_ns;
   //TODO not doing much with the random data yet
+
 }
 
 static TimeDuration pickDuration(){
-  return TimeDuration::FromMicroseconds(timeGranularity_ns/1000.0);
+  unsigned char randomData[8];
+  SECStatus rv = PK11_GenerateRandom(randomData,8);
+  if (rv != SECSuccess){
+    //TODO: Log this failure somewhere
+    // This is bad and we should stop trying to get random values
+    needsFuzzyInit = true;
+  }
+ return TimeDuration::FromMicroseconds(timeGranularity_ns/1000.0);
 }
 #endif
 

@@ -16,6 +16,8 @@
 #include "mozilla/TimeStamp.h"
 #include "pk11pub.h"
 
+#include "mozilla/Preferences.h"
+
 using namespace mozilla;
 
 static LazyLogModule sThreadPoolLog("nsThreadPool");
