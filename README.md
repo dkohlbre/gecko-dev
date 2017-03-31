@@ -1,3 +1,21 @@
+# FuzzyFox modifications
+
+You probably want the Fuzzyfox-rebase branch instead, although this
+one was more extensively tested.
+
+Are you a researcher using fuzzyfox to test attacks/clocks/timing/etc?
+Awesome! Please contact me and read
+https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_kohlbrenner.pdf
+.
+
+Fuzzyfox is a prototype of the Fermata model described in the USENIX
+2016 paper and protects only against a subset of the possible clocks
+in Firefox. It is also slightly unstable (ex: does not shut down
+cleanly) and should not be used as anything but a research tool.
+
+
+# Original README follows
+
 An explanation of the Mozilla Source Code Directory Structure and links to
 project pages with documentation can be found at:
 
